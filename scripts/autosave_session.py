@@ -19,14 +19,26 @@ def extract_text_from_content(content):
     return str(content) if content else ""
 
 
+def debug_log(msg: str):
+    log_path = Path(__file__).parent.parent / "autosave_debug.log"
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.now().isoformat()} {msg}\n")
+
+
 def main():
+    debug_log("hook invoked")
+
     try:
-        data = json.load(sys.stdin)
+        raw_stdin = sys.stdin.read()
+        debug_log(f"stdin: {raw_stdin[:200]}")
+        data = json.loads(raw_stdin)
         session_id = data.get("session_id", "")
-    except Exception:
+    except Exception as e:
+        debug_log(f"stdin parse error: {e}")
         return
 
     if not session_id:
+        debug_log("no session_id")
         return
 
     # Find the JSONL file across all project dirs under ~/.claude/projects/
@@ -40,6 +52,7 @@ def main():
                 break
 
     if not jsonl_file:
+        debug_log(f"no JSONL found for session {session_id} under {claude_projects}")
         return
 
     # Resolve output dir relative to this script's location (scripts/ → project root)
