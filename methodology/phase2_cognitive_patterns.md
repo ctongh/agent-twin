@@ -170,9 +170,9 @@ Phase 2 produces `cognitive_patterns.md`. The `profile-compressor` reads this fi
 
 ## See also
 
-- `methodology/template/pipeline.md` — overall pipeline architecture
-- `methodology/template/phase1_value_extraction.md` — Phase 1 (sibling phase, foundation)
-- `methodology/template/phase3_knowledge_graph.md` — uses Phase 2's lexical fields and metaphors as naming sources
-- `methodology/template/phase4_behavioral_model.md` — uses Phase 2's argument structure and oscillation patterns
+- `methodology/pipeline.md` — overall pipeline architecture
+- `methodology/phase1_value_extraction.md` — Phase 1 (sibling phase, foundation)
+- `methodology/phase3_knowledge_graph.md` — uses Phase 2's lexical fields and metaphors as naming sources
+- `methodology/phase4_behavioral_model.md` — uses Phase 2's argument structure and oscillation patterns
 - `agents/cognitive-patterns-builder.md` — the builder prompt
 - `agents/orchestrator.md` — how Phase 2 is dispatched in the overall pipeline

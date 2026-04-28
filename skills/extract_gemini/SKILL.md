@@ -1,6 +1,6 @@
 ---
 name: extract_gemini
-description: Capture a conversation from a Gemini share link and prepare it (with topic-cluster annotation) for the digital-persona analysis pipeline. Use when the user wants to import a Gemini conversation into the persona project.
+description: Capture a conversation from a Gemini share link and prepare it (with topic-cluster annotation) for the agent-twin analysis pipeline. Use when the user wants to import a Gemini conversation into the persona project.
 ---
 
 # extract_gemini

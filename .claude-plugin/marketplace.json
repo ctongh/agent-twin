@@ -1,12 +1,15 @@
 {
-  "name": "ctongh-marketplace",
-  "owner": {
-    "name": "ctongh",
-    "email": "zcc22592590@gmail.com",
-    "url": "https://github.com/ctongh"
-  },
-  "metadata": {
-    "description": "Personal Claude Code plugin marketplace by ctongh.",
-    "version": "0.1.0"
-  }
+  "name": "ctongh-plugins",
+  "description": "Claude Code plugins by ctongh.",
+  "plugins": [
+    {
+      "name": "agent-twin",
+      "version": "0.1.0",
+      "description": "Turn prior AI-conversation logs into a structured persona profile, then load it into future Claude Code sessions so the assistant adapts to who you actually are.",
+      "source": {
+        "source": "github",
+        "repo": "ctongh/agent-twin"
+      }
+    }
+  ]
 }

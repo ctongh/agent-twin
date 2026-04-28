@@ -3,7 +3,7 @@ description: Run meta-critic standalone on a directory of analyst outputs (manua
 argument-hint: [optional session_id of form YYYY-MM-DD_<8hex>, or full analyses_dir path]
 ---
 
-Execute the digital-persona `run_meta_critic` skill. Follow the SKILL.md below exactly.
+Execute the agent-twin `run_meta_critic` skill. Follow the SKILL.md below exactly.
 
 ## Argument resolution
 

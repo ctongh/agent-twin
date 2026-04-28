@@ -3,7 +3,7 @@ validator: methodology_neutrality
 status: implemented
 severity: hard
 scope:
-  - methodology/template/**
+  - methodology/**
   - agents/**
   - skills/**/SKILL.md
   - skills/**/TEMPLATE.md
@@ -13,7 +13,7 @@ scope:
 
 ## What it checks
 
-That nothing in the **shareable framework** (`methodology/template/`, `agents/`, public skill files) reveals identifying information about any specific subject.
+That nothing in the **shareable framework** (`methodology/`, `agents/`, public skill files) reveals identifying information about any specific subject.
 
 The benchmark for this validator is the project owner's principle:
 
@@ -101,7 +101,7 @@ findings:
 
 **Direct hit (hard)**:
 ```
-File: methodology/template/phase4_behavioral_model.md, line 122
+File: methodology/phase4_behavioral_model.md, line 122
 Matched: "對話者可以把最核心的幾個 BP 分享給親近的人（女友、信任的主管）"
 Severity: hard
 Suggestion: replace "女友、信任的主管" with "trusted personal contacts"
@@ -109,7 +109,7 @@ Suggestion: replace "女友、信任的主管" with "trusted personal contacts"
 
 **Inferential (soft)**:
 ```
-File: methodology/template/phase2_cognitive_patterns.md, lines 11-16
+File: methodology/phase2_cognitive_patterns.md, lines 11-16
 Matched: a list of vocabulary domains naming domain-specific jargon plus introspective
 language pointing toward one professional and psychological background
 Inference: implies a software engineer with strategic-business exposure and a particular

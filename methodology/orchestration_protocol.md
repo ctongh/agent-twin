@@ -6,11 +6,11 @@ output_language: derived_from_input
 
 # Orchestration Protocol
 
-> **Reading guide.** This file is the **orchestration protocol** for the digital-persona pipeline. It is **not** a dispatchable subagent — Claude Code's general-purpose subagents do not have access to the `Task` tool, so a subagent cannot fan out parallel sub-dispatches. Instead, this protocol is followed by the `/run_pipeline` skill at the **top level** of the conversation, where the `Task` tool is available. The skill reads this file, then issues the Task calls described below directly.
+> **Reading guide.** This file is the **orchestration protocol** for the agent-twin pipeline. It is **not** a dispatchable subagent — Claude Code's general-purpose subagents do not have access to the `Task` tool, so a subagent cannot fan out parallel sub-dispatches. Instead, this protocol is followed by the `/run_pipeline` skill at the **top level** of the conversation, where the `Task` tool is available. The skill reads this file, then issues the Task calls described below directly.
 >
 > An LLM reading this file may follow it sequentially in a single context (without parallel fan-out) as a fallback when nested Task is unavailable, but it loses the cross-agent triangulation that justifies the four-frame design.
 >
-> For the *why* behind the pipeline architecture, the four-frame design, the audit loop, and the methodological invariants, read `methodology/template/pipeline.md` instead.
+> For the *why* behind the pipeline architecture, the four-frame design, the audit loop, and the methodological invariants, read `methodology/pipeline.md` instead.
 
 ## Identity
 
@@ -123,7 +123,7 @@ Dispatch `synthesis-builder` via the Task tool. Task-prompt variables: `ANALYSES
 The `synthesis-builder` reads the four analyst reports and `meta_critic.md`, integrates them, and writes **two** files:
 
 1. `<ANALYSES_DIR>/synthesis.md` — the working artifact for Phase 3/4 builders (High-Consistency Findings, Real Divergences, Composite Portrait, Phase 3/4 seeds, Pipeline Caveats).
-2. `<PROFILE_DIR>/system_of_values.md` — the formal Phase 1 product, layered per `methodology/template/phase1_value_extraction.md` (Core / Boundaries / Strong preferences / Trade-able / Explicit-vs-Revealed Gaps / Pipeline Caveats).
+2. `<PROFILE_DIR>/system_of_values.md` — the formal Phase 1 product, layered per `methodology/phase1_value_extraction.md` (Core / Boundaries / Strong preferences / Trade-able / Explicit-vs-Revealed Gaps / Pipeline Caveats).
 
 The runner verifies both files exist; it does **not** re-derive synthesis content itself. Producing the layered hierarchy view is structural rearrangement of cross-frame findings, which is `synthesis-builder`'s job — not the runner's. (Putting it inline in the runner would violate the "runner adds no new analysis" rule.)
 

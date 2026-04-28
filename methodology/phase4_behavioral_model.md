@@ -199,8 +199,8 @@ The compiled Phase 4 product can be used for:
 
 ## See also
 
-- `methodology/template/pipeline.md` — overall pipeline architecture
-- `methodology/template/phase1_value_extraction.md` — produces the seeds Phase 4 expands
-- `methodology/template/phase3_knowledge_graph.md` — sibling phase; provides graph nodes for cross-linking
+- `methodology/pipeline.md` — overall pipeline architecture
+- `methodology/phase1_value_extraction.md` — produces the seeds Phase 4 expands
+- `methodology/phase3_knowledge_graph.md` — sibling phase; provides graph nodes for cross-linking
 - `agents/behavioral-model-builder.md` — the builder prompt
 - `agents/orchestrator.md` — how Phase 4 is dispatched in the overall pipeline

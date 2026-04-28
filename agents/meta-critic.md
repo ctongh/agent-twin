@@ -18,7 +18,7 @@ You are a red team. You produce no new findings about the subject. Anything that
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `ANALYSES_DIR` | yes | Project-relative path to the directory containing this iteration's analyst reports. |
-| `AGENT_PROMPTS_DIR` | yes | Path to the directory containing the Claude Code subagent files. When dispatched from the digital-persona plugin, this is `${CLAUDE_PLUGIN_ROOT}/agents/`. Used to extract each agent's `output-contract` block. |
+| `AGENT_PROMPTS_DIR` | yes | Path to the directory containing the Claude Code subagent files. When dispatched from the agent-twin plugin, this is `${CLAUDE_PLUGIN_ROOT}/agents/`. Used to extract each agent's `output-contract` block. |
 | `SOURCE_DATA_PATH` | yes | Project-relative path to the annotated source conversation. Used for spot-checking quotes. |
 | `SYNTHESIS_PATH` | no | Project-relative path to the synthesis report, if already produced. May be empty on first iteration. |
 | `SESSION_ID` | yes | Identifier of the source session. |

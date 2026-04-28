@@ -30,7 +30,7 @@ Read the synthesis and all four analyst reports in full before producing pattern
 
 ## Methodology
 
-The Phase 4 methodology document (`methodology/template/phase4_behavioral_model.md`) defines the Behavior Pattern schema (trigger thresholds, intensity-stratified responses, recovery, modulators, evidence, related patterns) and the per-pattern file format. Follow that document exactly.
+The Phase 4 methodology document (`methodology/phase4_behavioral_model.md`) defines the Behavior Pattern schema (trigger thresholds, intensity-stratified responses, recovery, modulators, evidence, related patterns) and the per-pattern file format. Follow that document exactly.
 
 ### Workflow
 
@@ -92,7 +92,7 @@ Write directly into the directory provided as `BEHAVIOR_DIR` with this structure
 ```
 
 Each pattern file contains:
-- YAML frontmatter following the schema in `methodology/template/phase4_behavioral_model.md`
+- YAML frontmatter following the schema in `methodology/phase4_behavioral_model.md`
 - A prose explanation expanding the schema
 - Representative quotes with turn IDs (and session IDs if cross-session)
 - Links to relevant Knowledge Graph nodes (`[[concept-name]]`) when `GRAPH_DIR` is provided

@@ -1,8 +1,8 @@
 ---
-description: Snapshot the current Claude Code conversation into the digital-persona project (idempotent; overwrites the same session)
+description: Snapshot the current Claude Code conversation into the agent-twin project (idempotent; overwrites the same session)
 ---
 
-Execute the digital-persona `save_session` skill. Follow the SKILL.md below exactly.
+Execute the agent-twin `save_session` skill. Follow the SKILL.md below exactly.
 
 Resolve the session ID deterministically from the active Claude Code JSONL as Step 1 specifies — do not generate a fresh GUID unless the JSONL truly cannot be located.
 

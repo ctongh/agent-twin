@@ -5,10 +5,10 @@
 > | If you want to … | Read |
 > |---|---|
 > | Understand the architecture and methodology | this file |
-> | Understand any single phase in depth | `methodology/template/phase{1,2,3,4}_*.md` |
+> | Understand any single phase in depth | `methodology/phase{1,2,3,4}_*.md` |
 > | See exactly what an agent does, step by step | `${CLAUDE_PLUGIN_ROOT}/agents/<agent-name>.md` |
-> | See how the runner dispatches the agents | `methodology/template/orchestration_protocol.md` |
-> | Understand how output validation works | `methodology/template/output_contract_schema.md` |
+> | See how the runner dispatches the agents | `methodology/orchestration_protocol.md` |
+> | Understand how output validation works | `methodology/output_contract_schema.md` |
 >
 > This file does **not** contain executable instructions for any LLM. It contains design rationale, invariants, and pointers.
 
@@ -106,7 +106,7 @@ Each writes to `personalized/saves/session/<session_id>/analyses/<short-name>.md
 
 Once the loop converges (or escalates), `synthesis-builder` is dispatched as its own stage. It reads the four analyst reports plus `meta_critic.md` and produces a cross-framework synthesis: high-consistency findings, real divergences, composite portrait, **Phase 3 seeds**, **Phase 4 seeds**, and pipeline caveats. From this synthesis, `system_of_values.md` is produced as the formal Phase 1 product.
 
-The exact dispatch protocol — parallelism, iteration feedback, when synthesis-builder runs — lives in `methodology/template/orchestration_protocol.md`. This file describes **why** four frames are needed; the orchestration protocol describes **how** they are run.
+The exact dispatch protocol — parallelism, iteration feedback, when synthesis-builder runs — lives in `methodology/orchestration_protocol.md`. This file describes **why** four frames are needed; the orchestration protocol describes **how** they are run.
 
 Common methodological constraints (each agent enforces these):
 
@@ -115,25 +115,25 @@ Common methodological constraints (each agent enforces these):
 3. **Cluster-boundary discipline**: high-confidence findings need evidence from ≥2 clusters
 4. **Long-session memory degradation**: late-session reframings may be partial reconstructions, not stable insights — flag them
 
-See `methodology/template/phase1_value_extraction.md` for the full Phase 1 specification.
+See `methodology/phase1_value_extraction.md` for the full Phase 1 specification.
 
 ## Stage 4 — Phase 2: Cognitive patterns build (no audit)
 
 A `cognitive-patterns-builder` runs over the source conversation and produces `cognitive_patterns.md`: lexical fields, metaphor systems, question style, argument structure, emotional–rational oscillation, and metacognition profile. Optionally a small quantitative pre-pass (Python regex/counters) produces baseline statistics the builder interprets.
 
-No meta-critic audit. The builder's output is short, language-level, and the subject can sanity-check it directly. See `methodology/template/phase2_cognitive_patterns.md`.
+No meta-critic audit. The builder's output is short, language-level, and the subject can sanity-check it directly. See `methodology/phase2_cognitive_patterns.md`.
 
 ## Stage 5 — Phase 3: Knowledge graph build (no audit)
 
 A `knowledge-graph-builder` consumes Phase 1's synthesis and seeds. It generates a directory of typed markdown nodes (concepts / emotions / people / events) with frontmatter, wiki-links, and edges typed by relation (tension / cause / derives / contradicts / reinforces / weakens / stands_for).
 
-No meta-critic audit; the subject inspects the graph directly in a markdown PKM (Obsidian Graph View, etc.). See `methodology/template/phase3_knowledge_graph.md`.
+No meta-critic audit; the subject inspects the graph directly in a markdown PKM (Obsidian Graph View, etc.). See `methodology/phase3_knowledge_graph.md`.
 
 ## Stage 6 — Phase 4: Behavioral model build (no audit)
 
 A `behavioral-model-builder` consumes Phase 1's seeds and expands each `Situation → Response` row into a full Behavior Pattern unit (trigger thresholds, intensity-stratified responses, recovery, modulators, evidence, related patterns). Output: one BP-XXX file per pattern.
 
-No meta-critic audit; subject self-review is the validation step (per the methodology doc). See `methodology/template/phase4_behavioral_model.md`.
+No meta-critic audit; subject self-review is the validation step (per the methodology doc). See `methodology/phase4_behavioral_model.md`.
 
 ## Stage 7 — Final compression: user_profile.md
 
@@ -191,11 +191,11 @@ Single-session input is always biased — the subject brings only some topics, i
 - `${CLAUDE_PLUGIN_ROOT}/agents/affect-analyst.md`, `${CLAUDE_PLUGIN_ROOT}/agents/social-dynamics-analyst.md`, `${CLAUDE_PLUGIN_ROOT}/agents/values-analyst.md`, `${CLAUDE_PLUGIN_ROOT}/agents/narrative-analyst.md` — Phase 1 analyst subagents
 - `${CLAUDE_PLUGIN_ROOT}/agents/meta-critic.md` — Phase 1 quality auditor subagent
 - `${CLAUDE_PLUGIN_ROOT}/agents/synthesis-builder.md` — Phase 1 cross-frame synthesizer subagent (writes `synthesis.md`)
-- `methodology/template/orchestration_protocol.md` — pipeline coordination protocol (Phase 1 loop + synthesis dispatch + Phase 2/3/4 dispatch + final compression). Followed by the `/run_pipeline` skill at top-level.
+- `methodology/orchestration_protocol.md` — pipeline coordination protocol (Phase 1 loop + synthesis dispatch + Phase 2/3/4 dispatch + final compression). Followed by the `/run_pipeline` skill at top-level.
 - `${CLAUDE_PLUGIN_ROOT}/agents/cognitive-patterns-builder.md` — Phase 2 builder
 - `${CLAUDE_PLUGIN_ROOT}/agents/knowledge-graph-builder.md` — Phase 3 builder
 - `${CLAUDE_PLUGIN_ROOT}/agents/behavioral-model-builder.md` — Phase 4 builder
 - `${CLAUDE_PLUGIN_ROOT}/agents/profile-compressor.md` — final compressor (writes `user_profile.md`)
-- `methodology/template/output_contract_schema.md` — contract format used by all audited agents
+- `methodology/output_contract_schema.md` — contract format used by all audited agents
 - `skills/run_pipeline/SKILL.md` — single user-facing entry point; executes the orchestration protocol
 - `skills/load_persona/SKILL.md` — conversation-layer entry point (reads `user_profile.md` only)

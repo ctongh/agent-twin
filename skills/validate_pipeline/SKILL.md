@@ -1,6 +1,6 @@
 ---
 name: validate_pipeline
-description: Run an umbrella validator over the digital-persona project. Confirms the shareable parts are free of personal data, the agent prompts are well-formed, the gitignore covers personal data correctly, and no skill is malicious. Use before committing methodology/template, agents/, or skills/ changes.
+description: Run an umbrella validator over the agent-twin project. Confirms the shareable parts are free of personal data, the agent prompts are well-formed, the gitignore covers personal data correctly, and no skill is malicious. Use before committing methodology/template, agents/, or skills/ changes.
 ---
 
 # validate_pipeline
@@ -13,7 +13,7 @@ The validators live in `skills/validate_pipeline/validators/`. As of writing:
 
 | Validator | Status | What it checks |
 |-----------|--------|----------------|
-| `methodology_neutrality` | implemented | The shareable framework files (`methodology/template/`, `agents/`, `skills/*/SKILL.md`, `skills/*/TEMPLATE.md`) reveal *no* identifying information about the subject |
+| `methodology_neutrality` | implemented | The shareable framework files (`methodology/`, `agents/`, `skills/*/SKILL.md`, `skills/*/TEMPLATE.md`) reveal *no* identifying information about the subject |
 | `agent_format` | planned | Each agent prompt has the required sections (identity, inputs, methodology, output, checklist, contract) and a parseable `output-contract` YAML block |
 | `gitignore` | planned | `.gitignore` covers all personal-data paths (`personalized/`, `methodology/personalized/`, etc.) and does not accidentally exclude framework files |
 | `malicious_skill` | planned | Skills do not include obviously dangerous instructions (network exfiltration, mass file deletion, credential access) |

@@ -138,7 +138,7 @@ Common early-career anxiety is not a "personality structure of attachment to ext
 | Concern | Where handled |
 |---------|---------------|
 | Variable injection (paths, session IDs) | the `/run_pipeline` skill passes inputs via the task prompt when dispatching each subagent |
-| Iteration loop | the `/run_pipeline` skill, following `methodology/template/orchestration_protocol.md`, branches on the `meta-critic` verdict, max 3 rounds |
+| Iteration loop | the `/run_pipeline` skill, following `methodology/orchestration_protocol.md`, branches on the `meta-critic` verdict, max 3 rounds |
 | Quality gate | `meta-critic` validates each analyst's output against its declared contract |
 | Cross-framework synthesis | `synthesis-builder` is dispatched after the audit accepts (or escalates); it reads the four analyst reports + `meta_critic.md` and writes `synthesis.md` |
 | Output-language consistency | All agents declare `output_language: derived_from_input` and check in their checklists |
@@ -160,10 +160,10 @@ For users with **only forward-going conversations**:
 
 ## See also
 
-- `methodology/template/pipeline.md` — overall pipeline architecture
-- `methodology/template/output_contract_schema.md` — how each agent declares its expected output
+- `methodology/pipeline.md` — overall pipeline architecture
+- `methodology/output_contract_schema.md` — how each agent declares its expected output
 - `${CLAUDE_PLUGIN_ROOT}/agents/values-analyst.md` — the direct values-extraction frame
 - `${CLAUDE_PLUGIN_ROOT}/agents/synthesis-builder.md` — the subagent that produces `synthesis.md` from the four analyst reports
-- `methodology/template/orchestration_protocol.md` — how Phase 1 + synthesis-builder dispatch is sequenced and how the rest of the pipeline is dispatched
-- `methodology/template/phase3_knowledge_graph.md` — downstream consumer of Phase 1 seeds
-- `methodology/template/phase4_behavioral_model.md` — downstream consumer of Phase 1 seeds
+- `methodology/orchestration_protocol.md` — how Phase 1 + synthesis-builder dispatch is sequenced and how the rest of the pipeline is dispatched
+- `methodology/phase3_knowledge_graph.md` — downstream consumer of Phase 1 seeds
+- `methodology/phase4_behavioral_model.md` — downstream consumer of Phase 1 seeds

@@ -1,6 +1,6 @@
 ---
 name: save_session
-description: Snapshot the current Claude Code conversation into the digital-persona project so that it can be analyzed later by the batch pipeline. Idempotent — re-invoking on the same session overwrites, never duplicates. Use at any natural session-end moment.
+description: Snapshot the current Claude Code conversation into the agent-twin project so that it can be analyzed later by the batch pipeline. Idempotent — re-invoking on the same session overwrites, never duplicates. Use at any natural session-end moment.
 ---
 
 # save_session

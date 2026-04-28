@@ -29,7 +29,7 @@ Read the synthesis and all four analyst reports in full before producing nodes.
 
 ## Methodology
 
-The Phase 3 methodology document (`methodology/template/phase3_knowledge_graph.md`) defines:
+The Phase 3 methodology document (`methodology/phase3_knowledge_graph.md`) defines:
 - Four node types: `Concept`, `Emotion`, `Person`, `Event`
 - Seven edge types: `tension`, `cause`, `derives`, `contradicts`, `reinforces`, `weakens`, `stands_for`
 - The frontmatter schema and node template

@@ -1,5 +1,5 @@
 {
-  "name": "digital-persona",
+  "name": "agent-twin",
   "version": "0.1.0",
   "description": "Turn prior AI-conversation logs into a structured persona profile, then load it into future Claude Code sessions so the assistant adapts to who you actually are.",
   "author": {
@@ -7,6 +7,8 @@
     "email": "zcc22592590@gmail.com",
     "url": "https://github.com/ctongh"
   },
+  "repository": "https://github.com/ctongh/agent-twin",
+  "homepage": "https://github.com/ctongh/agent-twin#readme",
   "keywords": [
     "persona",
     "personalization",
@@ -15,5 +17,19 @@
     "pipeline",
     "self-knowledge"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"",
+            "async": true,
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }

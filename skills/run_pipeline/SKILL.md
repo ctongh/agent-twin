@@ -1,13 +1,13 @@
 ---
 name: run_pipeline
-description: Run the full digital-persona analysis pipeline on a saved session. Dispatches the four Phase 1 analyst subagents in parallel, runs the meta-critic audit loop, dispatches the synthesis-builder, then the Phase 2/3/4 builders, then the behavior-brief-generator. Produces all four detailed products plus behavior_brief.md. Use when the subject has captured at least one session via /save_session or /counselor and wants a persona profile built.
+description: Run the full agent-twin analysis pipeline on a saved session. Dispatches the four Phase 1 analyst subagents in parallel, runs the meta-critic audit loop, dispatches the synthesis-builder, then the Phase 2/3/4 builders, then the behavior-brief-generator. Produces all four detailed products plus behavior_brief.md. Use when the subject has captured at least one session via /save_session or /counselor and wants a persona profile built.
 ---
 
 # run_pipeline
 
 This skill is the single user-facing entry point for the batch layer. It runs the entire pipeline end-to-end: Phase 1 audited analysis → synthesis → Phase 2/3/4 builds → final compression to `user_profile.md`.
 
-The skill **executes** the orchestration protocol defined in `methodology/template/orchestration_protocol.md` directly at the top level of the conversation, because Claude Code's general-purpose subagents do not have access to the `Task` tool — so the orchestration cannot be delegated to a single subagent. The skill is the runner; the protocol document describes the steps; the actual analysts/builders are real Claude Code subagents at `${CLAUDE_PLUGIN_ROOT}/agents/<name>.md`.
+The skill **executes** the orchestration protocol defined in `methodology/orchestration_protocol.md` directly at the top level of the conversation, because Claude Code's general-purpose subagents do not have access to the `Task` tool — so the orchestration cannot be delegated to a single subagent. The skill is the runner; the protocol document describes the steps; the actual analysts/builders are real Claude Code subagents at `${CLAUDE_PLUGIN_ROOT}/agents/<name>.md`.
 
 ## When to use this vs. other skills
 
@@ -124,7 +124,7 @@ Then proceed immediately to Step 3.
 
 ## Step 3 — Read the orchestration protocol
 
-Read `methodology/template/orchestration_protocol.md`. This is the protocol you (the skill, executing at top-level) will follow. The variable values resolved in Step 1 are the ones the protocol references.
+Read `methodology/orchestration_protocol.md`. This is the protocol you (the skill, executing at top-level) will follow. The variable values resolved in Step 1 are the ones the protocol references.
 
 ## Step 4 — Execute the protocol at top-level
 
@@ -361,5 +361,5 @@ The orchestration protocol is one document; running the pipeline manually means 
 ## Out of scope
 
 - Incremental pipeline runs (rebuilding only one phase) — for now, the pipeline always runs end-to-end. Incremental dispatch is a planned roadmap item.
-- Cross-session integration — when multiple sessions exist, this skill currently runs per-session. Cross-session merge is a planned roadmap item; see `methodology/template/pipeline.md` § Cross-session integration.
+- Cross-session integration — when multiple sessions exist, this skill currently runs per-session. Cross-session merge is a planned roadmap item; see `methodology/pipeline.md` § Cross-session integration.
 - Auto-loading the profile after build — by design, `/load_persona` must be invoked explicitly so the user perceives the before/after difference.

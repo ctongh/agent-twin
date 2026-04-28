@@ -1,9 +1,9 @@
 ---
-description: Run the full digital-persona analysis pipeline on a saved session — Phase 1 (4 analysts in parallel + meta-critic loop + synthesis-builder), then Phase 2/3/4 builders, then profile-compressor → user_profile.md.
+description: Run the full agent-twin analysis pipeline on a saved session — Phase 1 (4 analysts in parallel + meta-critic loop + synthesis-builder), then Phase 2/3/4 builders, then profile-compressor → user_profile.md.
 argument-hint: [optional session_id of form YYYY-MM-DD_<8hex>, or empty for most-recent]
 ---
 
-Execute the digital-persona `run_pipeline` skill. Follow the SKILL.md below exactly.
+Execute the agent-twin `run_pipeline` skill. Follow the SKILL.md below exactly.
 
 ## Argument resolution
 
@@ -30,7 +30,7 @@ The skill auto-resolves `input_path`, `source_json_path`, `analyses_dir`, `profi
 - On `iterate`, re-dispatch **only** the analysts marked `needs_revision`; analysts that passed carry forward unchanged.
 - `synthesis-builder` is a separate stage dispatched after the loop exits (`accept` or `escalate`). It writes both `analyses/synthesis.md` and `results/profile/system_of_values.md`.
 - Before Phase 3 / Phase 4 dispatch, clear `<profile_dir>/knowledge_graph/` and `<profile_dir>/behavioral_model/` unless `existing_graph` / `existing_model` were passed as `true` (cross-session merge mode).
-- The orchestration protocol governing every dispatch is `${CLAUDE_PLUGIN_ROOT}/methodology/template/orchestration_protocol.md` — read it if uncertain about variable substitution or stale-output handling.
+- The orchestration protocol governing every dispatch is `${CLAUDE_PLUGIN_ROOT}/methodology/orchestration_protocol.md` — read it if uncertain about variable substitution or stale-output handling.
 
 ## Pre-flight gate
 

@@ -204,8 +204,8 @@ Phase 3 produces the `knowledge_graph/` directory. The `profile-compressor` read
 
 ## See also
 
-- `methodology/template/pipeline.md` — overall pipeline architecture
-- `methodology/template/phase1_value_extraction.md` — produces the seeds Phase 3 expands
-- `methodology/template/phase4_behavioral_model.md` — sibling phase; consumes Phase 1 seeds independently
+- `methodology/pipeline.md` — overall pipeline architecture
+- `methodology/phase1_value_extraction.md` — produces the seeds Phase 3 expands
+- `methodology/phase4_behavioral_model.md` — sibling phase; consumes Phase 1 seeds independently
 - `agents/knowledge-graph-builder.md` — the builder prompt
 - `agents/orchestrator.md` — how Phase 3 is dispatched in the overall pipeline
