@@ -1,0 +1,19 @@
+{
+  "name": "digital-persona",
+  "version": "0.1.0",
+  "description": "Turn prior AI-conversation logs into a structured persona profile, then load it into future Claude Code sessions so the assistant adapts to who you actually are.",
+  "author": {
+    "name": "ctongh",
+    "email": "zcc22592590@gmail.com",
+    "url": "https://github.com/ctongh"
+  },
+  "keywords": [
+    "persona",
+    "personalization",
+    "conversation-analysis",
+    "subagents",
+    "pipeline",
+    "self-knowledge"
+  ],
+  "license": "MIT"
+}

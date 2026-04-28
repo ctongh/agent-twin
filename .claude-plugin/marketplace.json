@@ -1,0 +1,12 @@
+{
+  "name": "ctongh-marketplace",
+  "owner": {
+    "name": "ctongh",
+    "email": "zcc22592590@gmail.com",
+    "url": "https://github.com/ctongh"
+  },
+  "metadata": {
+    "description": "Personal Claude Code plugin marketplace by ctongh.",
+    "version": "0.1.0"
+  }
+}

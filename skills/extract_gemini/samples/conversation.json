@@ -1,0 +1,22 @@
+[
+  {
+    "order": 0,
+    "user": "How do I sort a list in Python?",
+    "model": "There are two common approaches in Python: `list.sort()` modifies the list in place and returns None, while `sorted(iterable)` returns a new sorted list and leaves the original untouched. For most use cases sorted() is preferable because it is non-destructive and works on any iterable, not just lists."
+  },
+  {
+    "order": 1,
+    "user": "What if I want descending order?",
+    "model": "Both `list.sort()` and `sorted()` accept a `reverse` keyword argument. Pass `reverse=True` to get descending order. Example: `sorted([3, 1, 2], reverse=True)` returns `[3, 2, 1]`."
+  },
+  {
+    "order": 2,
+    "user": "Can I sort by a custom key, like the length of each string?",
+    "model": "Yes — both functions accept a `key` parameter. Pass any callable that returns the value to sort by. For sorting strings by length: `sorted(['banana', 'fig', 'apple'], key=len)` returns `['fig', 'apple', 'banana']`. The key function is called once per element, so prefer cheap operations."
+  },
+  {
+    "order": 3,
+    "user": "What about sorting a list of dictionaries by a specific field?",
+    "model": "Use `key=lambda x: x['field_name']` or for cleaner syntax `key=operator.itemgetter('field_name')`. Itemgetter is slightly faster and reads more cleanly when sorting by multiple fields, e.g. `key=itemgetter('last_name', 'first_name')` sorts by last_name first and first_name as tiebreaker."
+  }
+]

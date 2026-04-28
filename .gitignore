@@ -1,0 +1,22 @@
+# Personal data — never committed to shared repos
+personalized/
+
+# Personalized methodology overrides — per-user customizations
+methodology/personalized/
+
+# OS / IDE artifacts
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (if any future tooling)
+node_modules/

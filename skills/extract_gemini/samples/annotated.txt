@@ -1,0 +1,14 @@
+
+### [Python sorting basics | turns 1+]
+[001] USER: How do I sort a list in Python?
+      AI summary: There are two common approaches in Python: `list.sort()` modifies the list in place and returns None, while `sorted...
+
+[002] USER: What if I want descending order?
+      AI summary: Both `list.sort()` and `sorted()` accept a `reverse` keyword argument. Pass `reverse=True` to get descending order. Exa...
+
+### [Custom sort keys | turns 3+]
+[003] USER: Can I sort by a custom key, like the length of each string?
+      AI summary: Yes — both functions accept a `key` parameter. Pass any callable that returns the value to sort by. For sorting str...
+
+[004] USER: What about sorting a list of dictionaries by a specific field?
+      AI summary: Use `key=lambda x: x['field_name']` or for cleaner syntax `key=operator.itemgetter('field_name')`. Itemgetter is sli...
