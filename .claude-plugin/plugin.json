@@ -18,18 +18,5 @@
     "self-knowledge"
   ],
   "license": "MIT",
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"",
-            "async": true,
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": "./hooks/hooks.json"
 }
