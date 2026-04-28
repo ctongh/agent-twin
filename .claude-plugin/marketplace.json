@@ -1,6 +1,11 @@
 {
   "name": "ctongh-plugins",
   "description": "Claude Code plugins by ctongh.",
+  "owner": {
+    "name": "ctongh",
+    "email": "zcc22592590@gmail.com",
+    "url": "https://github.com/ctongh"
+  },
   "plugins": [
     {
       "name": "agent-twin",
