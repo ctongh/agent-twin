@@ -38,14 +38,16 @@ Then use `$DATA_ROOT/...` for absolute paths. The Python autosave script uses `P
 
 ## Available skills
 
-Six slash commands are defined under `commands/`. Each one routes to a `SKILL.md` file. (A seventh, `/counselor`, is implemented in `skills/counselor/SKILL.md` but does not yet have a router under `commands/` — it is added in a follow-up commit.)
+Eight slash commands are defined under `commands/`. Each one routes to a `SKILL.md` file.
 
 | Command | SKILL.md | Purpose |
 |---|---|---|
 | `/extract_gemini` | `skills/extract_gemini/SKILL.md` | Import a Gemini conversation via share link |
 | `/save_session` | `skills/save_session/SKILL.md` | Snapshot the current Claude Code session |
+| `/counselor` | `skills/counselor/SKILL.md` | Guided conversation that produces a pipeline-ready session (questionnaire for first-time users, companion mode for returning users) |
 | `/run_pipeline` | `skills/run_pipeline/SKILL.md` | Run the full 4-phase analysis pipeline |
 | `/load_persona` | `skills/load_persona/SKILL.md` | Load the compiled brief silently into this session |
+| `/show_persona` | `skills/show_persona/SKILL.md` | Print compiled persona products to the conversation for inspection (viewer; does not load anything) |
 | `/run_meta_critic` | `skills/run_meta_critic/SKILL.md` | Standalone quality audit of existing analyses |
 | `/validate_pipeline` | `skills/validate_pipeline/SKILL.md` | Check methodology compliance |
 
@@ -119,10 +121,10 @@ For execution details, read `skills/<name>/SKILL.md`. For agent behavior, read `
 Plugin code (${CLAUDE_PLUGIN_ROOT}):
 agent-twin/
 ├── agents/          # 10 subagent system prompts
-├── commands/        # 6 slash command routers (one-line dispatch to skill)
+├── commands/        # 8 slash command routers (one-line dispatch to skill)
 ├── methodology/     # design_notes.md + output_contract_schema.md only
 ├── scripts/         # autosave_session.py (Stop hook)
-└── skills/          # 7 SKILL.md files (the source of truth for each command)
+└── skills/          # 8 SKILL.md files (the source of truth for each command)
 
 User data ($HOME/.claude/agent-twin):
 $HOME/.claude/agent-twin/
