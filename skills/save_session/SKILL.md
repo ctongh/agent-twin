@@ -111,3 +111,5 @@ Calling `save_session` twice within the same Claude Code session must produce **
 - Cleanup / retention of old session captures (will be addressed later)
 - Cross-session deduplication (different CC sessions may have overlapping content; this is fine)
 - Anything that requires network access (capture is local-only)
+
+Saved. Next: run `/run_pipeline` to analyze, or run `/save_session` again later to update.

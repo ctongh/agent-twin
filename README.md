@@ -35,7 +35,7 @@ Verify with `python --version` (expect `Python 3.x.x`). No external Python packa
 
 | What you're doing | Command | Key outcome |
 |---|---|---|
-| Import a Gemini conversation | `/extract_gemini` | `conversation.json` + annotated topic clusters |
+| Import a Gemini conversation | `/extract_gemini` (legacy/optional) | `conversation.json` + annotated topic clusters |
 | Save the current session | `/save_session` | Session snapshot ready for analysis |
 | Guided capture or companion mode | `/counselor` | Structured questionnaire or contextual conversation |
 | Build the full persona profile | `/run_pipeline` | 5 profile products + actionable behavior brief |
@@ -49,8 +49,27 @@ Verify with `python --version` (expect `Python 3.x.x`). No external Python packa
 
 ## Quick Start
 
-<details>
-<summary><b>Claude Code</b></summary>
+Install via the Claude Code plugin marketplace, then build your first profile.
+
+```
+/plugin marketplace add ctongh/agent-twin
+/plugin install agent-twin@ctongh-plugins
+```
+<!-- TODO: confirm exact marketplace install command against https://code.claude.com/docs/en/plugins-reference; if Claude Code uses a different command verb, update this snippet. -->
+
+Then in any Claude Code session:
+
+```
+/counselor
+```
+
+Answer the questionnaire, then run `/run_pipeline` when prompted, then `/load_persona` in a new session.
+
+---
+
+## Development
+
+For contributors who want to modify the plugin itself (not just use it):
 
 ```bash
 git clone https://github.com/ctongh/agent-twin.git
@@ -58,39 +77,7 @@ cd agent-twin
 claude
 ```
 
-The autosave hook runs automatically on session exit — no extra setup needed for capture. To build your first profile:
-
-```
-/counselor
-```
-
-Answer the questionnaire, then run `/run_pipeline` when prompted.
-
-</details>
-
-<details>
-<summary><b>Configure the autosave hook</b></summary>
-
-If you move the project directory, update the path in `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "Stop": [{
-      "hooks": [{
-        "type": "command",
-        "command": "python /absolute/path/to/agent-twin/scripts/autosave_session.py",
-        "async": true,
-        "timeout": 30
-      }]
-    }]
-  }
-}
-```
-
-Requires Python 3. No external dependencies.
-
-</details>
+The plugin loads from the local checkout. SKILL.md files under `skills/` are the source of truth; `commands/` are thin routers; `methodology/` is design notes only.
 
 ---
 
@@ -100,7 +87,7 @@ Requires Python 3. No external dependencies.
 
 | Skill | What It Does | Use When |
 |---|---|---|
-| [extract_gemini](skills/extract_gemini/SKILL.md) | Imports a Gemini share-link conversation; validates schema, auto-generates topic-cluster annotations | You have Gemini conversations you want analyzed |
+| [extract_gemini](skills/extract_gemini/SKILL.md) (legacy/optional) | Imports a Gemini share-link conversation; validates schema, auto-generates topic-cluster annotations | You specifically want to import a Gemini conversation; otherwise prefer `/save_session` or `/counselor` |
 | [save_session](skills/save_session/SKILL.md) | Snapshots the active Claude Code session; deterministic session ID; token-aware truncation; idempotent | You want to capture the current conversation before it ends |
 | [counselor](skills/counselor/SKILL.md) | First-time: asks 10 questions one at a time with natural follow-up. Returning: reads your profile silently and opens contextually | Starting from scratch, or wanting a guided reflection session |
 
@@ -130,7 +117,7 @@ Requires Python 3. No external dependencies.
 `/run_pipeline` dispatches 10 specialized subagents across 4 sequential phases. Each phase runs independently; only Phase 1 carries a quality gate.
 
 ```
-  Phase 1 — Four-Frame Audited Analysis (~10–12 min)
+  Phase 1 — Four-Frame Audited Analysis (~12 min)
   ┌─────────────────────────────────────────────────────────────┐
   │  Step 1: Four analysts dispatched in parallel               │
   │    affect-analyst  ·  social-dynamics-analyst               │

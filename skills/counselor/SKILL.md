@@ -86,3 +86,5 @@ When the conversation reaches a natural end:
 - Reference the analysis pipeline or methodology mid-conversation
 - Ask multiple questions at once
 - Push the user to keep talking if they want to stop
+
+Done. Next: run `/save_session` to capture this conversation, then `/run_pipeline` to analyze it.

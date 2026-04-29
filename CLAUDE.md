@@ -42,7 +42,7 @@ Eight slash commands are defined under `commands/`. Each one routes to a `SKILL.
 
 | Command | SKILL.md | Purpose |
 |---|---|---|
-| `/extract_gemini` | `skills/extract_gemini/SKILL.md` | Import a Gemini conversation via share link |
+| `/extract_gemini` (legacy/optional) | `skills/extract_gemini/SKILL.md` | Import a Gemini conversation via share link. Primary capture is `/save_session` or `/counselor` — use this only for Gemini imports. |
 | `/save_session` | `skills/save_session/SKILL.md` | Snapshot the current Claude Code session |
 | `/counselor` | `skills/counselor/SKILL.md` | Guided conversation that produces a pipeline-ready session (questionnaire for first-time users, companion mode for returning users) |
 | `/run_pipeline` | `skills/run_pipeline/SKILL.md` | Run the full 4-phase analysis pipeline |

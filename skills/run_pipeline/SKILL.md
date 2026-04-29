@@ -63,7 +63,7 @@ If the user specified a `session_id` explicitly, process only that session (bypa
 
 **Sort and display:**
 
-Sort the queue by session directory creation date, oldest first. Tell the user — in their language — how many sessions are queued and the estimated total time (~20 min per session). Then proceed without waiting for confirmation.
+Sort the queue by session directory creation date, oldest first. Tell the user — in their language — how many sessions are queued and the estimated total time (~20 min per session; 5 sessions ≈ ~1.5–2 hours). Then proceed without waiting for confirmation.
 
 If the queue is empty, tell the user everything is already up to date.
 
@@ -114,11 +114,32 @@ If a session's state shows `analysts: in_progress` (was interrupted mid-analysis
 
 Print a brief notice — in the user's language — that covers:
 - Session being analyzed (`<session_id>`)
-- Estimated time: **~20 minutes**
+- Estimated time: **~20 minutes per session** (5 sessions ≈ ~1.5–2 hours)
 - What each phase does (one line each: four analysts in parallel → quality check → synthesis; language patterns; knowledge graph; behavioral model; final collaboration brief)
 - An encouraging line — something warm that acknowledges this is meaningful work and they're on their way
 
-**Do not ask for confirmation.** The user already invoked this skill deliberately. Just start immediately after the notice.
+### Step 2.1 — Soft cost preflight
+
+Before dispatching any subagent, compute a back-of-envelope cost estimate for the queue. This is informational only — do **not** wait for confirmation.
+
+Procedure:
+1. For each session in the queue, get the byte size of its `annotated.txt` (or, if not yet generated, of `conversation.json`). Sum across the queue to get `total_bytes`.
+2. Approximate input tokens: `tokens ≈ total_bytes / 4` (1 token ≈ 4 chars heuristic; works for ASCII and is a slight overestimate for CJK, which is fine for a soft estimate).
+3. Approximate dispatch count per session: 4 phase-1 analysts × up to 3 iterations + 1 meta-critic + 1 synthesis + 3 builders (cognitive / knowledge graph / behavioral) + 1 brief generator ≈ **10–13 subagent calls per session**, each reading the full annotated.txt for that session. Use **12** as a working midpoint per session.
+4. Total tokens read across the run ≈ `tokens × 12` (rough; the brief generator reads the products instead of annotated.txt, so this slightly overcounts — acceptable for a soft estimate).
+
+Print **one line** before dispatch, in the user's language, of the form:
+
+```
+Estimated work: <N> session(s), ~<X>K tokens read across ~<M> subagent calls. Proceeding...
+```
+
+Where:
+- `<N>` = number of sessions in the queue
+- `<X>` = `round((tokens × 12) / 1000)` (rounded to nearest thousand)
+- `<M>` = `N × 12` (working midpoint)
+
+**Do not ask for confirmation.** The user already invoked this skill deliberately. Just start immediately after the line.
 
 Then proceed immediately to Step 3.
 
@@ -295,7 +316,7 @@ Task-prompt variables: `PROFILE_DIR=<profile_dir>`, `OUTPUT_PATH=<profile_dir>/b
 
 Verify `<profile_dir>/behavior_brief.md` exists and is ≤80 lines. Update state: set `final` → `complete`.
 
-The full pipeline run is long (~10 minutes typical for a single session). Inform the user that the dispatch has started and report progress between phase boundaries.
+The full pipeline run is long (~20 minutes typical for a single session; 5 sessions ≈ ~1.5–2 hours). Inform the user that the dispatch has started and report progress between phase boundaries.
 
 ## Step 4 — Surface the execution log
 
@@ -359,3 +380,5 @@ Running the pipeline manually means resolving every variable, dispatching every 
 - Incremental pipeline runs (rebuilding only one phase) — for now, the pipeline always runs end-to-end. Incremental dispatch is a planned roadmap item.
 - Cross-session integration — when multiple sessions exist, this skill currently runs per-session. Cross-session merge is a planned roadmap item.
 - Auto-loading the profile after build — by design, `/load_persona` must be invoked explicitly so the user perceives the before/after difference.
+
+Pipeline complete. Next: run `/load_persona` to apply the brief to this session, or `/show_persona` to inspect what was built.

@@ -5,6 +5,8 @@ description: Capture a conversation from a Gemini share link and prepare it (wit
 
 # extract_gemini
 
+> **Legacy / optional capture path.** This SKILL imports a Gemini share-link conversation. The primary capture path for agent-twin is `/save_session` (snapshots the current Claude Code session) or `/counselor` (guided questionnaire). Use `/extract_gemini` only if you specifically want to import a Gemini conversation.
+
 When this skill is invoked, walk the user through extracting a Gemini conversation and producing the two files the analysis pipeline needs:
 
 | File | Purpose |
@@ -45,17 +47,19 @@ Do not silently overwrite. The session ID is the de-facto join key for downstrea
 
 Ask the user for a Gemini share link (a URL like `gemini.google.com/share/<id>`). If they don't have one yet, instruct them to open the conversation in Gemini and click the share button.
 
-Then show them the capture procedure:
+**The scraper is browser-only.** `scraper.js` uses `window`, `document`, and `MutationObserver` — it is **not** runnable as `node scraper.js` from a terminal. The user must paste it into the DevTools Console of the open Gemini share page.
 
-1. Open the share link in a browser
-2. **Scroll to the top of the conversation** (this forces all turns to render — Gemini uses virtual scrolling and the scraper depends on every turn being in the DOM at least once)
-3. Open DevTools (`F12`) → Console
-4. Paste the contents of `skills/extract_gemini/scraper.js` Step 1 block, press Enter — it will start logging captures
-5. Scroll smoothly through the **entire** conversation from top to bottom (the MutationObserver picks up each turn as it scrolls into view)
-6. Confirm the captured count matches the user's expected turn count
-7. Paste the Step 2 block to download `gemini-conversation.json`
+Then walk the user through the capture procedure:
 
-You can read the actual scraper at `skills/extract_gemini/scraper.js` and paste the relevant blocks for the user.
+1. Open the Gemini share link in a browser (the share URL must already be loaded in the visible tab).
+2. **Scroll to the top of the conversation.** Gemini uses virtual scrolling, so every turn must enter the DOM at least once — start at the top.
+3. Open DevTools by pressing `F12` (or right-click → *Inspect*), then switch to the **Console** tab.
+4. **Open `skills/extract_gemini/scraper.js`, copy the *Step 1* block, paste it into the Console, and press Enter.** It will start logging "捕捉第 N 輪" as it captures turns.
+5. Scroll smoothly through the **entire** conversation from top to bottom. The `MutationObserver` picks up each turn as it scrolls into view.
+6. Confirm the captured count in the Console matches the user's expected turn count.
+7. **Copy the *Step 2* block from `scraper.js`, paste it into the Console, and press Enter.** A file named `gemini-conversation.json` will download via the browser.
+
+You can read the actual scraper at `skills/extract_gemini/scraper.js` and paste the relevant blocks for the user. Do not attempt to run it from a terminal — it has no Node entry point.
 
 ## Step 3 — Receive the captured file
 
@@ -142,3 +146,5 @@ skills/extract_gemini/
     ├── conversation.json ← minimal valid input
     └── annotated.txt     ← minimal valid output
 ```
+
+Imported. Next: run `/run_pipeline` to analyze the captured conversation.

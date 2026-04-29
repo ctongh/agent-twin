@@ -4,7 +4,7 @@
   "description": "Turn prior AI-conversation logs into a structured persona profile, then load it into future Claude Code sessions so the assistant adapts to who you actually are.",
   "author": {
     "name": "ctongh",
-    "email": "zcc22592590@gmail.com",
+    "email": "75067139+ctongh@users.noreply.github.com",
     "url": "https://github.com/ctongh"
   },
   "repository": "https://github.com/ctongh/agent-twin",
