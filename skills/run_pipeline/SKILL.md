@@ -99,7 +99,7 @@ If the user specified a `session_id` explicitly, process only that session (bypa
 
 **Sort and display:**
 
-Sort the queue by session directory creation date, oldest first. Tell the user — in their language — how many sessions are queued and the estimated total time (~20 min per session; 5 sessions ≈ ~1.5–2 hours). Then proceed without waiting for confirmation.
+Sort the queue by session directory creation date, oldest first. Tell the user — in their language — how many sessions are queued and the estimated total time (~35 min per session; 5 sessions ≈ ~3 hours). Then proceed without waiting for confirmation.
 
 If the queue is empty, tell the user everything is already up to date.
 
@@ -207,7 +207,7 @@ If a session's per-session state shows `analysts: in_progress` (was interrupted 
 
 Print a brief notice — in the user's language — that covers:
 - Session being analyzed (`<session_id>`)
-- Estimated time: **~20 minutes per session** (5 sessions ≈ ~1.5–2 hours)
+- Estimated time: **~35 minutes per session** (5 sessions ≈ ~3 hours). Phase 3 and Phase 4 are the heavy parts (~10 min each).
 - What each phase does (one line each: four analysts in parallel → quality check → synthesis; language patterns; knowledge graph; behavioral model; final collaboration brief)
 - An encouraging line — something warm that acknowledges this is meaningful work and they're on their way
 
@@ -409,7 +409,7 @@ Task-prompt variables: `PROFILE_DIR=<profile_dir>`, `OUTPUT_PATH=<profile_dir>/b
 
 Verify `<profile_dir>/behavior_brief.md` exists and is ≤80 lines. Update state: set `final` → `complete`.
 
-The full pipeline run is long (~20 minutes typical for a single session; 5 sessions ≈ ~1.5–2 hours). Inform the user that the dispatch has started and report progress between phase boundaries.
+The full pipeline run is long (~35 minutes typical for a single session; 5 sessions ≈ ~3 hours). Inform the user that the dispatch has started and report progress between phase boundaries.
 
 ## Step 4 — Surface the execution log
 

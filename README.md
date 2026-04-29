@@ -11,7 +11,7 @@ agent-twin reads back the AI conversations you've already had, looks at them thr
   │  logs  │      │ pipeline  │         │  _brief  │     │session │
   └────────┘      └───────────┘         └──────────┘     └────────┘
 /save_session    /run_pipeline                          /load_persona
-/extract_gemini   ~20 minutes            ≤80 lines
+/extract_gemini   ~35 minutes            ≤80 lines
 /counselor        10 subagents
 ```
 
@@ -26,6 +26,20 @@ You give it a few of your real conversations. It gives you back:
 - **A repeatable pipeline** you re-run whenever you've accumulated enough new conversation data. The profile gets sharper over time; you don't have to start over.
 
 The point isn't to mimic you. It's to give Claude enough context to drop the warm-up questions every session and meet you where you actually are.
+
+---
+
+## Visualizing the persona
+
+Phase 3 and Phase 4 don't just produce text — they produce two folder-shaped artefacts deliberately authored for **Obsidian's graph view**. The knowledge graph emits typed concept, emotion, person, and event nodes connected by seven distinct edge types (tension, cause, derives, contradicts, reinforces, weakens, stands_for); the behavioural model emits one file per pattern (`BP-001`, `BP-002`, …) with cross-links between related patterns. Every internal reference is a wiki-link, so opening the output folder as a vault gives you a navigable, clustering map of how concepts and behaviours sit relative to each other in your actual thinking.
+
+<!-- TODO: knowledge_graph Obsidian PNG -->
+*[Knowledge graph visualization will be added]*
+
+<!-- TODO: behavioral_model Obsidian PNG -->
+*[Behavioral model visualization will be added]*
+
+To open: point Obsidian at `$HOME/.claude/agent-twin/personalized/results/profile/` as a vault. Open the graph view (Ctrl/Cmd+G). The wiki-link edges between nodes form a typed concept graph; the clusters that emerge reveal how your concepts are grouped — which themes pull on each other, which behaviours share triggers, where your value system tightens around a single anchor. This is the most direct way to *see* the profile rather than just read its summary; the brief is the operational interface, the graph view is where the structure becomes visible.
 
 ---
 
@@ -44,7 +58,7 @@ Then, in any session:
 /counselor
 ```
 
-`/counselor` walks you through a guided conversation that produces enough data for the pipeline. When it finishes, it tells you to run `/run_pipeline`. Around twenty minutes later you'll have your first brief. Open a fresh session and run `/load_persona` — that's it.
+`/counselor` walks you through a guided conversation that produces enough data for the pipeline. When it finishes, it tells you to run `/run_pipeline`. Around thirty-five minutes later you'll have your first brief. Open a fresh session and run `/load_persona` — that's it.
 
 If you'd rather feed it a conversation you've already had, use `/save_session` (snapshots the current Claude Code session) or `/extract_gemini` (imports a Gemini share-link conversation) instead of `/counselor`.
 
@@ -118,11 +132,11 @@ Once you have at least one captured conversation, `/run_pipeline` orchestrates t
     cognitive-patterns-builder reads source conversation
     → cognitive_patterns.md  (Product 2)
 
-  Phase 3 — Knowledge Graph (~3 min)
+  Phase 3 — Knowledge Graph (~10 min)
     knowledge-graph-builder seeds from Phase 1 synthesis
     → knowledge_graph/  (Product 3)  — Concept · Emotion · Person · Event nodes
 
-  Phase 4 — Behavioral Model (~3 min)
+  Phase 4 — Behavioral Model (~10 min)
     behavioral-model-builder seeds from Phase 1 synthesis
     → behavioral_model/  (Product 4)  — BP-001 … BP-NNN
 
@@ -130,6 +144,8 @@ Once you have at least one captured conversation, `/run_pipeline` orchestrates t
     behavior-brief-generator reads all four products
     → behavior_brief.md  (Product 5)  — ≤80 lines, imperative form
 ```
+
+Per-session run is **~35 minutes** end-to-end (Phase 1 ~12, Phase 2 ~2, Phase 3 ~10, Phase 4 ~10, Final ~1). Phase 3 and Phase 4 are the heavy stretches — they emit dozens of typed graph nodes and behavior-pattern files respectively, and that's where most of the wall-clock time goes.
 
 **Why four parallel analysts?** A single LLM reading a conversation tends to lock onto whichever frame strikes it first and ignore the others. By forcing four separate contexts to each commit to one lens — emotional, relational, values-based, narrative — the design prevents any single perspective from drowning out the rest. The meta-critic then checks all four for contract compliance, contradictions, and AI-anchoring residue before the synthesis pass merges them.
 
