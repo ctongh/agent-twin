@@ -23,11 +23,11 @@ On Windows that is typically `C:/Users/<user>/.claude/projects/<encoded-project-
 
 1. List the JSONL files in the project's `~/.claude/projects/<encoded-project-path>/` directory. There is exactly one file matching the *current* session — find it by inspecting the most recently modified JSONL (the active session writes to its file continuously).
 2. Extract the CC session UUID from the filename.
-3. Derive the save-session ID: `<YYYY-MM-DD>_<first-8-hex-chars-of-cc-session-uuid>`. Use today's date.
+3. Derive the save-session ID: `<YYYY-MM-DD>_<first-12-hex-chars-of-cc-session-uuid>`. Use today's date. (12 hex chars gives ~1/280-trillion collision probability — practically zero — versus 8 chars at ~1/4-billion.)
 
 This gives a deterministic mapping: the same Claude Code session always maps to the same save-session ID. Re-invoking the skill in the same session overwrites the previous snapshot rather than producing duplicates.
 
-If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `python -c "import uuid; print(uuid.uuid4().hex[:8])"` and proceed.
+If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `python -c "import uuid; print(uuid.uuid4().hex[:12])"` and proceed.
 
 ## Step 2 — Create the session directory
 

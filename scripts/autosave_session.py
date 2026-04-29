@@ -1,12 +1,26 @@
 #!/usr/bin/env python3
 """
 Stop hook for agent-twin: silently captures the ending Claude Code session
-and saves extracted turns to personalized/saves/session/<date>_<session-id[:8]>/.
+and saves extracted turns to personalized/saves/session/<date>_<session-id[:12]>/.
 """
 import json
+import os
 import sys
 from pathlib import Path
 from datetime import datetime
+
+
+def atomic_write_text(path: Path, content: str, encoding: str = "utf-8") -> None:
+    """Write text atomically: write to <path>.tmp, then os.replace to final.
+
+    os.replace is atomic on POSIX and atomic-ish on Windows NTFS for same-volume
+    renames. A killed process (Stop hook timeout, OS shutdown, disk full) can no
+    longer leave a half-written JSON file at the final path; the worst case is a
+    leftover .tmp sibling that subsequent runs will overwrite.
+    """
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(content, encoding=encoding)
+    os.replace(tmp, path)
 
 
 def extract_text_from_content(content):
@@ -54,7 +68,7 @@ def main():
         return
 
     saves_base = DATA_ROOT / "personalized" / "saves" / "session"
-    session_prefix = session_id[:8]
+    session_prefix = session_id[:12]
 
     # Reuse the existing directory for this session if one exists (handles cross-day sessions).
     # Directory names follow the pattern <date>_<session-prefix>.
@@ -127,15 +141,16 @@ def main():
         return
 
     out = save_dir / "conversation.json"
-    out.write_text(json.dumps(turns, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_text(out, json.dumps(turns, ensure_ascii=False, indent=2))
 
     meta = {
         "session_id": session_id,
         "turn_count": len(turns),
         "saved_at": datetime.now().isoformat(),
     }
-    (save_dir / "session_meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+    atomic_write_text(
+        save_dir / "session_meta.json",
+        json.dumps(meta, ensure_ascii=False, indent=2),
     )
 
 

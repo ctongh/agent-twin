@@ -38,6 +38,42 @@ The skill auto-resolves:
 - `agent_prompts_dir` → `${CLAUDE_PLUGIN_ROOT}/agents/`
 - `build_timestamp` → today's ISO-8601 date
 
+## Step 0 — Resume check (run BEFORE any other work)
+
+The pipeline maintains state at two levels (per-session + global, see Step 1.6 for the full schema). Before doing anything else — before scanning the queue, before annotating, before dispatching any subagent — check whether a prior run left state behind. This handles two failure modes with one mechanism:
+
+- **Crash recovery** — the SKILL was interrupted mid-pipeline (machine reboot, hook timeout, network drive hiccup).
+- **Token-exhaustion mid-pipeline** — the user ran out of API budget mid-run; the SKILL crashed at whatever phase was active.
+
+Both reduce to: state file says some phase is `in_progress` or `pending`, the rest of the pipeline did not run. Resume from the next non-complete boundary.
+
+### Step 0.1 — Locate prior state
+
+Read the **global** state file at `$HOME/.claude/agent-twin/personalized/results/profile/pipeline_state.json` if it exists.
+
+Also scan per-session state files at `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/pipeline_state.json` for any session where `phases.analysts` is not `complete`.
+
+### Step 0.2 — Branch on prior state
+
+| Prior state | User-facing prompt | Action on Y / Yes / default | Action on N / No |
+|---|---|---|---|
+| No state files anywhere | (no prompt — fresh run) | Proceed to Step 1 | n/a |
+| All phases (per-session `analysts` for all queued sessions AND global `phase1` / `phase2` / `phase3` / `phase4` / `final`) are `complete` AND `conversation_turns_at_analysis` matches current `turn_count` for every session | "This session already has a complete profile. Re-run the pipeline from scratch? [y/N]" | Archive existing state files (rename to `pipeline_state.<ISO-8601-timestamp>.json` in the same dir) and proceed to Step 1 as a fresh run. | Stop. Tell the user: "Nothing to do. Run `/load_persona` to use the existing profile, or `/show_persona` to inspect it." |
+| Any phase is `in_progress` (a prior run was interrupted mid-phase) | "Found an interrupted pipeline run — last in-progress phase was `<phase_name>` at `<updated_at>`. Resume? [Y/n]" | Resume: leave state intact, proceed to Step 1, and per Step 1.6's resume rules re-dispatch the in-progress phase from scratch. | Archive prior state files and proceed to Step 1 as a fresh run. |
+| Some phases `complete`, some `pending`, none `in_progress` (clean phase boundary; previous run finished a phase but never started the next) | "Found prior pipeline state — last completed phase was `<phase_name>`. Resume from `<next_phase_name>`? [Y/n]" | Resume: leave state intact, proceed to Step 1, and skip already-complete phases per their step-level skip rules. | Archive prior state files and proceed to Step 1 as a fresh run. |
+
+**Archiving rule:** when the user declines a resume, do **not** delete prior state files. Rename them in place to `pipeline_state.<ISO-8601-with-no-colons>.json` (e.g. `pipeline_state.2026-04-29T142311.json`). This preserves audit trail and never destroys data on user decline.
+
+### Step 0.3 — Why this naturally covers token exhaustion
+
+If the user runs out of API budget mid-pipeline, the SKILL crashes wherever it was. The state file's last-written boundary marks the resume point. Next invocation hits Step 0, sees one phase `in_progress`, offers resume. No special-case code is needed — it's the same crash-recovery path.
+
+### Step 0.4 — What this is NOT
+
+- **No mid-subagent checkpointing.** A subagent's internal progress is opaque; if it dies, we restart the whole subagent. That's acceptable: cost of one rerun is small compared to the complexity of recovering partial outputs.
+- **No partial Phase-1 recovery.** If three of four analysts completed and the fourth died, we re-dispatch all four (Phase 1 Step 1 is the boundary). The analysts are designed to overwrite their outputs deterministically.
+- **No separate `/resume_pipeline` command.** Resume lives inside `/run_pipeline`'s start path.
+
 ## Step 1 — Build the session queue
 
 **Pre-check: is there data to analyze?**
@@ -78,11 +114,15 @@ For **each session in the queue**, check if `annotated.txt` exists.
 - If it exists: proceed.
 - If missing: generate it by reading `conversation.json` and inserting sequential topic cluster headers (`[Cluster 01]`, `[Cluster 02]`, …) every 5–8 turns based on topic shifts. Tell the user — in their language — what you are doing and that it will continue automatically. Write to `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt`.
 
-## Step 1.6 — Pipeline state check (checkpoint / resume)
+## Step 1.6 — Pipeline state files (checkpoint / resume detail)
 
-Each session has its own state file at `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/pipeline_state.json`.
+State is split across two files — one per-session (covers what's specific to a single capture: annotation + analysts) and one global (covers everything cumulative: meta-critic, synthesis, phase 2/3/4, brief).
 
-**Schema:**
+### Per-session state file
+
+Path: `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/pipeline_state.json`
+
+Schema:
 ```json
 {
   "session_id": "<session_id>",
@@ -94,21 +134,74 @@ Each session has its own state file at `$HOME/.claude/agent-twin/personalized/sa
     "analysts":      "pending|in_progress|complete"
   },
   "phase1_iterations": 0,
-  "phase1_escalated": false
+  "phase1_escalated": false,
+  "notes": ""
 }
 ```
 
-Note: `analysts` is the only phase tracked per-session. The global phases (meta-critic, synthesis, phase2, phase3, phase4, final) are tracked in a **separate global state file** at `$HOME/.claude/agent-twin/personalized/results/profile/pipeline_state.json` (same schema structure, `session_id` field contains the most recently processed session).
+`notes` is a free-text scratch field the SKILL may append to for resume context (e.g. "iter 2 escalated due to evidence gap on values"). Optional; do not require it for parsing.
 
-**Per-session state update protocol:**
-- Before generating annotated.txt: set `annotated_txt` → `in_progress`
-- After annotated.txt written: set `annotated_txt` → `complete`
-- Before dispatching analysts: set `analysts` → `in_progress`
-- After analysts complete and output is verified: set `analysts` → `complete` AND set `conversation_turns_at_analysis` to the current turn count
+### Global state file
+
+Path: `$HOME/.claude/agent-twin/personalized/results/profile/pipeline_state.json`
+
+Schema:
+```json
+{
+  "last_session_id": "<most-recently-processed-session-id>",
+  "started_at": "<ISO-8601>",
+  "updated_at": "<ISO-8601>",
+  "phases": {
+    "phase1":  "pending|in_progress|complete",
+    "phase2":  "pending|in_progress|complete",
+    "phase3":  "pending|in_progress|complete",
+    "phase4":  "pending|in_progress|complete",
+    "final":   "pending|in_progress|complete"
+  },
+  "phase1_iteration_count": 0,
+  "phase1_meta_critic_verdict": "accept|iterate|escalate|null",
+  "phase1_escalated": false,
+  "notes": ""
+}
+```
+
+`phase1` is the cumulative meta-critic + synthesis pass run **after** all queued sessions have completed their per-session `analysts` phase. The four downstream phases plus the final brief are then run once each.
+
+### Atomic writes are mandatory for state files
+
+Both state files must be written **atomically**. A killed process (Ctrl-C, OS shutdown, network drive hiccup, token exhaustion crashing the SKILL) must not leave a half-written state file at the canonical path — that would brick the resume protocol.
+
+Use this pattern in any environment that supports it:
+
+1. Write the new content to `<path>.tmp` first.
+2. Then perform a same-volume rename (`mv -f`, `os.replace`, `Move-Item -Force`) onto the final path.
+
+The autosave Stop hook (`scripts/autosave_session.py`) ships with an `atomic_write_text` helper — use the same approach here. If the SKILL is invoking the Write tool directly, the rename-into-place step matters more than the temp filename: write fresh content in a single Write call (not append-then-truncate). Treat any state file with an unparseable JSON tail as corrupt, archive it (rename to `pipeline_state.corrupt.<timestamp>.json`), and treat that session/global slot as fresh.
+
+### Per-session state update protocol
+
+- Before generating annotated.txt: set `annotated_txt` → `in_progress` (atomic write)
+- After annotated.txt written: set `annotated_txt` → `complete` (atomic write)
+- Before dispatching analysts: set `analysts` → `in_progress` (atomic write)
+- After analysts complete and output is verified: set `analysts` → `complete` AND set `conversation_turns_at_analysis` to the current turn count (atomic write)
+- After each Phase 1 meta-critic iteration: increment `phase1_iterations` and (post-loop) record `phase1_escalated` (atomic write)
 - Write using the Write tool — never delegate to a subagent.
 
-**Resuming an interrupted session in the queue:**
-If a session's state shows `analysts: in_progress` (was interrupted mid-analysis), re-run its analysts from scratch. The analysts will re-read the cumulative report and the full session — no data is lost.
+### Global state update protocol
+
+- Before running global Phase 1 (meta-critic + synthesis on cumulative analyses): set `phase1` → `in_progress`; record `started_at` if first run (atomic write)
+- After global Phase 1 completes: set `phase1` → `complete`; record `phase1_iteration_count`, `phase1_meta_critic_verdict`, `phase1_escalated` (atomic write)
+- At the start of each downstream phase: set the corresponding key (`phase2`, `phase3`, `phase4`, `final`) → `in_progress` (atomic write)
+- At the successful end of each downstream phase: set the corresponding key → `complete` (atomic write)
+- On final brief written and verified: set `final` → `complete`; refresh `updated_at` (atomic write)
+
+### Cleanup after a successful run
+
+Keep the state files. They are useful on the next invocation (Step 0 will see all phases `complete` and prompt for re-run). Do not delete them at end of pipeline.
+
+### Resuming an interrupted session in the queue
+
+If a session's per-session state shows `analysts: in_progress` (was interrupted mid-analysis), re-run its analysts from scratch. The analysts will re-read the cumulative report and the full session — no data is lost. Same logic applies to global phases marked `in_progress`: re-dispatch the corresponding builder.
 
 ## Step 2 — Pre-flight notice
 
