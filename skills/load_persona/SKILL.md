@@ -38,11 +38,14 @@ Do not block on the warning — proceed with the existing brief unless the user 
 
 ## Step 2 — Acknowledge and internalize
 
-Write one short line to confirm the brief is active:
+Write one short line to confirm the brief is active, then on a second line surface the audit pointer:
 
-> Write one brief line — in the user's language — confirming the brief is now active. Keep it low-key; the persona should be felt, not announced.
+> Line 1: one brief acknowledgment in the user's language confirming the brief is now active. Keep it low-key; the persona should be felt, not announced.
+> Line 2: a one-line pointer in the same language, equivalent to: *"Use `/show_persona` to inspect what was loaded, or `/show_persona all` to see the full profile."*
 
-Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can read `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` directly.
+The audit pointer is intentional — it is the lightest-weight integrity check the system offers. The user always has a one-command path to see exactly what shaped this session, even if they normally won't use it. Do not omit this line.
+
+Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can run `/show_persona` (preferred) or read `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` directly.
 
 From this point, every response in the session should follow the instructions in the brief. The **禁區** section takes highest priority.
 
@@ -65,4 +68,5 @@ If the user's global Claude config (`~/.claude/CLAUDE.md` or a project-level `CL
 - [ ] `behavior_brief.md` was read in full
 - [ ] If the file was missing or stale, the user was informed
 - [ ] A one-line acknowledgment was written (brief was NOT printed to conversation)
+- [ ] A `/show_persona` audit pointer was surfaced alongside the acknowledgment
 - [ ] No detailed products were loaded
