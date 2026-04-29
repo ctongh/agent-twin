@@ -1,8 +1,8 @@
 # agent-twin
 
-**Turn your AI conversation logs into a structured persona profile — then load it into every new Claude session.**
+**A Claude Code plugin that learns who you are from your own conversations, then teaches every future session to talk to *you* — not a generic user.**
 
-agent-twin analyzes how you actually think, communicate, and make decisions. It builds a layered profile from your real conversations using a four-frame analytical pipeline, then compresses everything into a practical brief that silently shapes every future response.
+agent-twin reads back the AI conversations you've already had, looks at them through four independent analytical lenses, and distills what it finds into a short brief. From then on, whenever you load that brief at the start of a session, Claude already knows the rhythm of how you think, the kinds of mistakes you don't want it to make, and the topics where you've changed your mind before.
 
 ```
    CAPTURE           ANALYZE              COMPRESS          LOAD
@@ -17,104 +17,89 @@ agent-twin analyzes how you actually think, communicate, and make decisions. It 
 
 ---
 
-## Requirements
+## What you get
 
-Python 3.8+ is required for the autosave Stop hook and the `/save_session` skill. Without Python, those features become silent no-ops (the hook never fires; the skill surfaces an error). Everything else — the analysis pipeline, `/load_persona`, `/show_persona`, `/counselor` — works without Python.
+You give it a few of your real conversations. It gives you back:
 
-Install Python:
+- **A persona brief** — a short, action-oriented document the assistant reads at the start of each session so it stops explaining things you already know, stops missing your emotional register, and stops recommending paths that contradict how you actually decide.
+- **Four detailed profile artefacts** sitting underneath the brief — value system, cognitive patterns, knowledge graph, behavioural patterns — that you can read for yourself if you want to see *why* the assistant is behaving the way it is.
+- **A repeatable pipeline** you re-run whenever you've accumulated enough new conversation data. The profile gets sharper over time; you don't have to start over.
 
-- **Windows**: download from https://www.python.org/downloads/ (the official installer enables both `python` and `py` on PATH); or `winget install Python.Python.3.12`
-- **macOS**: `brew install python` (Homebrew); the system `python3` also works on macOS 12+
-- **Linux**: `sudo apt install python3` (Debian/Ubuntu) or `sudo dnf install python3` (Fedora)
-
-Verify with `python --version` (expect `Python 3.x.x`). No external Python packages are needed.
+The point isn't to mimic you. It's to give Claude enough context to drop the warm-up questions every session and meet you where you actually are.
 
 ---
 
-## Commands
+## Get started
 
-| What you're doing | Command | Key outcome |
-|---|---|---|
-| Import a Gemini conversation | `/extract_gemini` (legacy/optional) | `conversation.json` + annotated topic clusters |
-| Save the current session | `/save_session` | Session snapshot ready for analysis |
-| Guided capture or companion mode | `/counselor` | Structured questionnaire or contextual conversation |
-| Build the full persona profile | `/run_pipeline` | 5 profile products + actionable behavior brief |
-| Load persona into this session | `/load_persona` | Brief silently shapes every subsequent response |
-| Re-audit existing analyses | `/run_meta_critic` | Quality verdict without re-running analysts |
-| Check methodology compliance | `/validate_pipeline` | Pass/fail per validator, with findings |
-
-`/run_pipeline` is the primary entry point. The other commands feed it (capture) or use its output (load).
-
----
-
-## Quick Start
-
-Install via the Claude Code plugin marketplace, then build your first profile.
+You don't need to know git. The plugin installs straight from inside Claude Code.
 
 ```
 /plugin marketplace add ctongh/agent-twin
 /plugin install agent-twin@ctongh-plugins
 ```
-<!-- TODO: confirm exact marketplace install command against https://code.claude.com/docs/en/plugins-reference; if Claude Code uses a different command verb, update this snippet. -->
 
-Then in any Claude Code session:
+Then, in any session:
 
 ```
 /counselor
 ```
 
-Answer the questionnaire, then run `/run_pipeline` when prompted, then `/load_persona` in a new session.
+`/counselor` walks you through a guided conversation that produces enough data for the pipeline. When it finishes, it tells you to run `/run_pipeline`. Around twenty minutes later you'll have your first brief. Open a fresh session and run `/load_persona` — that's it.
 
----
+If you'd rather feed it a conversation you've already had, use `/save_session` (snapshots the current Claude Code session) or `/extract_gemini` (imports a Gemini share-link conversation) instead of `/counselor`.
 
-## Development
+### Troubleshooting: install fails with an SSH error
 
-For contributors who want to modify the plugin itself (not just use it):
+The marketplace fetches plugins by cloning their git repositories. By default it uses SSH, which only works if your machine has an SSH key registered with GitHub. If install bails out with a message about authentication, permissions, or `git@github.com`, you have two options.
+
+**Option 1 — set up an SSH key on GitHub.** This is the long-term fix and the option to pick if you publish your own plugins. GitHub's official walkthrough lives here: <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>. Once your key is on your account, retry the install.
+
+**Option 2 — tell git to use HTTPS instead, just for fetches.** If you only consume plugins and never push code to GitHub, you can sidestep SSH entirely with one line of configuration:
 
 ```bash
-git clone https://github.com/ctongh/agent-twin.git
-cd agent-twin
-claude
+git config --global url."https://github.com/".insteadOf "git@github.com:"
 ```
 
-The plugin loads from the local checkout. SKILL.md files under `skills/` are the source of truth; `commands/` are thin routers; `methodology/` is design notes only.
+What this does: every time any tool on your system asks git to clone something starting with `git@github.com:` (the SSH form), git silently rewrites the URL to `https://github.com/...` (the anonymous web form) before contacting GitHub. The marketplace doesn't know or care; it just sees the clone succeed. The setting is global — it lives in your user-level `.gitconfig` — and you can undo it later with `git config --global --unset url.https://github.com/.insteadOf` if you change your mind.
 
 ---
 
-## All 7 Skills
+## Requirements
 
-### Capture — Get conversations into the pipeline
+Most of agent-twin runs in pure Claude Code with no extra software. Two pieces of functionality — the autosave Stop hook and the `/save_session` skill — call out to Python. If Python isn't on your PATH the hook quietly skips itself and the skill prints a friendly error; everything else (the analysis pipeline, `/load_persona`, `/show_persona`, `/counselor`) keeps working.
 
-| Skill | What It Does | Use When |
-|---|---|---|
-| [extract_gemini](skills/extract_gemini/SKILL.md) (legacy/optional) | Imports a Gemini share-link conversation; validates schema, auto-generates topic-cluster annotations | You specifically want to import a Gemini conversation; otherwise prefer `/save_session` or `/counselor` |
-| [save_session](skills/save_session/SKILL.md) | Snapshots the active Claude Code session; deterministic session ID; token-aware truncation; idempotent | You want to capture the current conversation before it ends |
-| [counselor](skills/counselor/SKILL.md) | First-time: asks 10 questions one at a time with natural follow-up. Returning: reads your profile silently and opens contextually | Starting from scratch, or wanting a guided reflection session |
+If you do want autosave and `/save_session`:
 
-### Analyze — Build the profile
+- **Windows** — install from <https://www.python.org/downloads/> (the official installer wires up both `python` and `py`), or run `winget install Python.Python.3.12`.
+- **macOS** — `brew install python` from Homebrew. The `python3` that ships with macOS 12+ also works.
+- **Linux** — `sudo apt install python3` on Debian/Ubuntu, `sudo dnf install python3` on Fedora.
 
-| Skill | What It Does | Use When |
-|---|---|---|
-| [run_pipeline](skills/run_pipeline/SKILL.md) | Orchestrates all 10 subagents across 4 phases; queue scanning; checkpoint/resume; produces 5 profile products | You have at least one captured session and want a profile built |
-
-### Load — Put the profile to work
-
-| Skill | What It Does | Use When |
-|---|---|---|
-| [load_persona](skills/load_persona/SKILL.md) | Reads `behavior_brief.md`; checks for staleness; one-line acknowledgment; brief shapes every response from that point | Opening a new session and wanting the assistant to adapt to you |
-
-### Quality — Audit and validate
-
-| Skill | What It Does | Use When |
-|---|---|---|
-| [run_meta_critic](skills/run_meta_critic/SKILL.md) | Standalone audit of existing analyst outputs against output contracts; no re-dispatch; timestamped history | Reviewing Phase 1 quality without re-running the full pipeline |
-| [validate_pipeline](skills/validate_pipeline/SKILL.md) | Runs sub-validators (methodology neutrality, etc.); aggregates pass/fail verdict with per-validator findings | Before sharing or publishing methodology files |
+Confirm with `python --version` (you should see `Python 3.8` or later). No PyPI packages are required — the scripts use only the standard library.
 
 ---
 
-## The Analysis Pipeline
+## What you can run
 
-`/run_pipeline` dispatches 10 specialized subagents across 4 sequential phases. Each phase runs independently; only Phase 1 carries a quality gate.
+Eight slash commands ship with the plugin. Most users will only ever touch three of them (`/counselor`, `/run_pipeline`, `/load_persona`). The others exist for specific situations.
+
+| You want to… | Command | Result |
+|---|---|---|
+| Generate conversation data via guided questions | `/counselor` | Structured questionnaire (first time) or contextual companion mode (if a profile already exists) |
+| Snapshot the conversation you're in right now | `/save_session` | Session captured under `personalized/saves/session/` |
+| Pull in an existing Gemini conversation | `/extract_gemini` *(legacy/optional)* | Imported, schema-checked, topic-clustered |
+| Build the full persona profile | `/run_pipeline` | All four detailed artefacts plus the brief |
+| Apply your profile to this session | `/load_persona` | Silent load — the assistant adapts from here on |
+| See what the assistant just loaded | `/show_persona` | Prints the brief; supports `values`, `cognitive`, `graph`, `model`, `all` |
+| Re-audit Phase 1 without rebuilding | `/run_meta_critic` | Quality verdict on existing analyst outputs |
+| Methodology compliance check | `/validate_pipeline` | Privacy, format, and safety verdict per validator |
+
+`/run_pipeline` is the one that does the heavy lifting. The capture commands feed into it; the load and inspection commands consume what comes out.
+
+---
+
+## How the pipeline works
+
+Once you have at least one captured conversation, `/run_pipeline` orchestrates ten specialised subagents across four sequential phases. Each subagent runs in its own context so they can't influence each other.
 
 ```
   Phase 1 — Four-Frame Audited Analysis (~12 min)
@@ -146,62 +131,64 @@ The plugin loads from the local checkout. SKILL.md files under `skills/` are the
     → behavior_brief.md  (Product 5)  — ≤80 lines, imperative form
 ```
 
-**Why four frames in parallel?** Each analyst reads the same conversation through a different lens — emotional, relational, values-based, narrative. Running them in separate contexts prevents any one frame from contaminating another. The meta-critic then checks for contradictions and filters AI-anchoring residue before synthesis.
+**Why four parallel analysts?** A single LLM reading a conversation tends to lock onto whichever frame strikes it first and ignore the others. By forcing four separate contexts to each commit to one lens — emotional, relational, values-based, narrative — the design prevents any single perspective from drowning out the rest. The meta-critic then checks all four for contract compliance, contradictions, and AI-anchoring residue before the synthesis pass merges them.
+
+The pipeline can be safely interrupted. State is written at every phase boundary, and re-invoking `/run_pipeline` offers to resume from the last completed phase rather than starting over.
 
 ---
 
-## The 10 Agents
+## The principles the analysis follows
 
-Pre-configured specialist subagents. Dispatched exclusively by `/run_pipeline` — not for manual invocation.
+These rules are applied uniformly across every phase — they are what the meta-critic enforces and what the synthesis must respect.
 
-### Phase 1 Analysts (dispatched in parallel)
+**Action over words.** What you do under pressure tells more than what you say about yourself. Behavioural evidence outweighs self-report.
 
-| Agent | Frame | Looks For |
+**The AI-anchoring filter.** A framing only counts as yours if you introduced or extended it in your own language. Lines where you merely echoed back something Claude said are excluded from the evidence pool.
+
+**Cluster-boundary discipline.** A high-confidence claim must be supported by evidence drawn from at least two distinct topic clusters. One-cluster observations are flagged as provisional, never promoted to certainty.
+
+**Evidence hierarchy.** Pre-rational signals (physical reactions, slips, emotional outbursts) outrank concrete actions, which outrank corrections you made to Claude, which outrank cross-cluster recurrence, which outranks single self-disclosures, which outrank statements you only reflected back from the model.
+
+**No new findings in the audit layer.** The meta-critic checks contracts and surfaces contradictions. It does not introduce its own claims about you.
+
+**Source-language preservation.** Every artefact is written in the dominant language of the source conversation. Nothing is translated.
+
+**Privacy is structural.** No identifying detail about you appears in any shareable file (methodology, agents, skills). Personal data is confined to `personalized/`, which is git-ignored.
+
+---
+
+## The ten agents
+
+These are the specialist subagents the pipeline dispatches. They are not meant to be invoked by hand — `/run_pipeline` is the only sanctioned entry point.
+
+### Phase 1 — analysts (run in parallel)
+
+| Agent | Frame | Looks for |
 |---|---|---|
 | [affect-analyst](agents/affect-analyst.md) | Emotional | Fear structures, defensive operations, attachment dynamics, emotional needs |
-| [social-dynamics-analyst](agents/social-dynamics-analyst.md) | Relational | Power positioning, status consciousness, authority relationships, organizational strategies |
+| [social-dynamics-analyst](agents/social-dynamics-analyst.md) | Relational | Power positioning, status consciousness, authority relationships, organisational strategies |
 | [values-analyst](agents/values-analyst.md) | Values | Core vs. boundary vs. trade-able values; declared vs. revealed gaps from action evidence |
 | [narrative-analyst](agents/narrative-analyst.md) | Self-story | Identity language, causal attribution, self-coined vs. AI-borrowed metaphors |
 
-### Phase 1 Synthesis & QA
+### Phase 1 — synthesis and QA
 
 | Agent | Role |
 |---|---|
 | [meta-critic](agents/meta-critic.md) | Audits all four analysts against output contracts; issues per-analyst verdicts; drives the iteration loop |
-| [synthesis-builder](agents/synthesis-builder.md) | Integrates all four frames into a single cross-frame synthesis; writes `system_of_values.md` |
+| [synthesis-builder](agents/synthesis-builder.md) | Integrates the four frames into a single cross-frame synthesis; writes `system_of_values.md` |
 
-### Phases 2–4 Builders
+### Phases 2 to 4 — builders
 
 | Agent | Output |
 |---|---|
 | [cognitive-patterns-builder](agents/cognitive-patterns-builder.md) | Lexical fields, metaphor systems, question style, argument structure, emotional-rational oscillation |
 | [knowledge-graph-builder](agents/knowledge-graph-builder.md) | Typed markdown nodes with seven edge types (tension, cause, derives, contradicts, reinforces, weakens, stands_for) |
 | [behavioral-model-builder](agents/behavioral-model-builder.md) | BP files: trigger → response at low/medium/high intensity, modulators, recovery, inter-pattern relations |
-| [behavior-brief-generator](agents/behavior-brief-generator.md) | Final ≤80-line brief in imperative form — every sentence must be directly actionable by the assistant |
+| [behavior-brief-generator](agents/behavior-brief-generator.md) | Final ≤80-line brief in imperative form — every sentence directly actionable by the assistant |
 
 ---
 
-## Methodology Principles
-
-Every product is governed by a set of invariants applied consistently across all phases:
-
-**Action over words.** Behavioral evidence outweighs self-report. What someone does under pressure reveals more than what they say about themselves.
-
-**AI-anchoring filter.** A concept counts as the subject's only if they introduced or extended it in their own language. Statements that only echo Claude's framing are excluded from evidence.
-
-**Cluster-boundary discipline.** High-confidence claims require evidence from at least two separate topic clusters. Single-cluster observations are flagged as provisional.
-
-**Evidence hierarchy.** Pre-rational signals (physical reactions, slips, emotional outbursts) > concrete actions > subject correcting Claude > cross-cluster recurrence > single self-disclosure > AI-anchored statements.
-
-**No new findings in the audit layer.** The meta-critic validates contracts and flags contradictions between analysts — it never introduces novel analysis of the subject.
-
-**Output language matches source.** Every product is written in the dominant language of the source conversation. No translation.
-
-**Privacy-neutral framework.** No identifying details about the subject appear in any shareable file (methodology, agents, skills). All personal data lives in `personalized/`, which is git-ignored.
-
----
-
-## Project Structure
+## Where files live
 
 ```
 agent-twin/
@@ -217,7 +204,7 @@ agent-twin/
 │   ├── behavioral-model-builder.md      #   Phase 4
 │   └── behavior-brief-generator.md      #   Final compression
 │
-├── skills/                              # 7 SKILL.md files
+├── skills/                              # 7 SKILL.md files (sources of truth)
 │   ├── extract_gemini/                  #   Capture: Gemini import
 │   ├── save_session/                    #   Capture: Claude Code session
 │   ├── counselor/                       #   Capture: guided questionnaire
@@ -226,19 +213,23 @@ agent-twin/
 │   ├── run_meta_critic/                 #   QA: standalone audit
 │   └── validate_pipeline/               #   QA: methodology compliance
 │
-├── commands/                            # 6 slash command routers
+├── commands/                            # 8 slash command routers
 ├── methodology/                         # Design notes + output contract schema
 ├── scripts/
 │   └── autosave_session.py              # Stop hook: capture on session exit
-│
 ├── hooks/
 │   └── hooks.json                       # Autosave hook configuration
-│
-├── CLAUDE.md                            # Project context for Claude Code
-│
-└── personalized/                        # ← git-ignored; all user data
-    ├── saves/session/<date>_<id>/       #   Captured conversations
-    └── results/profile/                 #   Compiled persona products
+├── CLAUDE.md                            # Plugin orientation document
+└── ...
+```
+
+User data — captured sessions and compiled persona artefacts — lives entirely outside the plugin tree, under `$HOME/.claude/agent-twin/personalized/`. That location survives plugin updates and is never committed.
+
+```
+$HOME/.claude/agent-twin/
+└── personalized/
+    ├── saves/session/<date>_<id>/       # Captured conversations
+    └── results/profile/                 # Compiled persona products
         ├── system_of_values.md          #   Phase 1 output (audited)
         ├── cognitive_patterns.md        #   Phase 2 output
         ├── knowledge_graph/             #   Phase 3 output
@@ -248,13 +239,26 @@ agent-twin/
 
 ---
 
-## Why agent-twin?
+## For developers
 
-AI assistants adapt to tone and topic within a session — but start fresh every time. The patterns in how you think, what you value, and how you respond under pressure never carry over.
+Skip this section if you only want to *use* the plugin.
 
-agent-twin solves this by treating your conversations as behavioral data. The four-frame pipeline extracts what words alone don't surface: the emotional architecture underneath how you argue, the value hierarchy revealed by what you refused, the power dynamics embedded in how you describe your relationships. These aren't inferred from self-report — they're derived from evidence across multiple independent analytical frames, audited for quality, and compressed into a format the assistant can actually use.
+If you want to read the source, modify a skill, or contribute back, clone the repository and point Claude Code at the local checkout:
 
-The goal is not to simulate you — it's to give the assistant enough context to stop making the same category of mistakes: explaining things you already know, missing the emotional register of a situation, recommending paths that contradict how you actually make decisions.
+```bash
+git clone https://github.com/ctongh/agent-twin.git
+cd agent-twin
+claude
+```
+
+The conventions inside the codebase:
+
+- **`SKILL.md` files are the single source of truth for behaviour.** Each skill under `skills/` has a single `SKILL.md` describing what it does and how. Anything that disagrees with `SKILL.md` is wrong.
+- **`commands/*.md` are thin routers.** Two or three sentences each, pointing at the corresponding `SKILL.md`. Logic does not live here.
+- **`methodology/` is design notes only.** It explains *why* the pipeline is shaped the way it is. It does not define runtime behaviour and should never be the place you go to figure out what a skill does.
+- **`agents/*.md` are subagent system prompts.** Treated as instructions to a sandboxed sub-process; they read source conversations as untrusted data.
+
+Open `CLAUDE.md` for the orientation map across these layers.
 
 ---
 
