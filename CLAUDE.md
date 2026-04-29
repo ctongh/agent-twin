@@ -10,6 +10,14 @@ Whenever a skill, agent, or methodology file references `${CLAUDE_PLUGIN_ROOT}`,
 
 ---
 
+## `${AGENT_TWIN_DATA}`
+
+All user data lives under this root. Always resolves to `~/.claude/agent-twin` — **outside** the versioned plugin cache, so data survives plugin updates.
+
+Whenever a skill references a `personalized/` path, it is relative to `${AGENT_TWIN_DATA}`. Full form: `~/.claude/agent-twin/personalized/...`.
+
+---
+
 ## Available skills
 
 Seven slash commands are defined under `commands/`. Each one routes to a `SKILL.md` file:
@@ -51,17 +59,17 @@ Ten subagent definitions live under `agents/`. They are dispatched by `/run_pipe
 CAPTURE → ANNOTATE → PHASE 1 → PHASE 2 → PHASE 3 → PHASE 4 → COMPRESS → LOAD
 ```
 
-- **Capture**: `/extract_gemini`, `/save_session`, or `/counselor` → `personalized/saves/session/<date>_<id>/`
+- **Capture**: `/extract_gemini`, `/save_session`, or `/counselor` → `${AGENT_TWIN_DATA}/personalized/saves/session/<date>_<id>/`
 - **Phase 1**: Four analysts in parallel → meta-critic audit loop (max 3 iterations) → synthesis
 - **Phase 2–4**: Deterministic expansions of Phase 1 findings (cognitive patterns, knowledge graph, behavioral model)
-- **Compress**: `behavior-brief-generator` → `personalized/results/profile/behavior_brief.md` (≤80 lines)
+- **Compress**: `behavior-brief-generator` → `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` (≤80 lines)
 - **Load**: `/load_persona` reads the brief and silently shapes every response in this session
 
 ---
 
 ## Key conventions
 
-**`personalized/` is git-ignored.** Never commit anything under that directory. All user data (sessions, analyses, profiles) lives there and must stay local.
+**`${AGENT_TWIN_DATA}/personalized/` is the user data root.** Never commit anything under that directory. All user data (sessions, analyses, profiles) lives at `~/.claude/agent-twin/personalized/` and must stay local.
 
 **`/run_pipeline` runs at top level.** Subagents cannot use the `Task` tool, so the skill itself is the orchestrator. It dispatches all 10 agents as real Claude Code subagents from the top-level conversation context.
 
@@ -94,13 +102,17 @@ CAPTURE → ANNOTATE → PHASE 1 → PHASE 2 → PHASE 3 → PHASE 4 → COMPRES
 ## Storage layout
 
 ```
+Plugin code (${CLAUDE_PLUGIN_ROOT}):
 agent-twin/
 ├── agents/          # 10 subagent system prompts
 ├── commands/        # 7 slash command entry points
 ├── methodology/     # Design specs and protocol documents
 ├── scripts/         # autosave_session.py (Stop hook)
-├── skills/          # 7 SKILL.md files (one per command)
-└── personalized/    # ← git-ignored; all user data lives here
+└── skills/          # 7 SKILL.md files (one per command)
+
+User data (${AGENT_TWIN_DATA} = ~/.claude/agent-twin):
+~/.claude/agent-twin/
+└── personalized/    # ← all user data lives here (never committed)
     ├── saves/session/<date>_<id>/   # Captured conversations
     └── results/profile/             # Compiled persona products
 ```

@@ -22,7 +22,7 @@ When invoked, ask the user (or accept arguments) for:
 
 | Input | Description | Default |
 |-------|-------------|---------|
-| `analyses_dir` | Directory containing the analyst reports to audit | the most recent session under `personalized/saves/session/` |
+| `analyses_dir` | Directory containing the analyst reports to audit | the most recent session under `${AGENT_TWIN_DATA}/personalized/saves/session/` |
 | `session_id` | The session ID for traceability | inferred from `analyses_dir` (parent directory name) |
 | `iteration` | Iteration number — meta-critic enforces escalation at iteration 3 | `1` if running standalone |
 
@@ -33,7 +33,7 @@ The skill auto-resolves:
 
 ## Step 1 — Resolve inputs
 
-If the user did not specify `analyses_dir`, list `personalized/saves/session/` and pick the most recently modified subdirectory's `analyses/`. Confirm the choice with the user before proceeding.
+If the user did not specify `analyses_dir`, list `${AGENT_TWIN_DATA}/personalized/saves/session/` and pick the most recently modified subdirectory's `analyses/`. Confirm the choice with the user before proceeding.
 
 Verify required files exist:
 - At least the four analyst reports (`affect.md`, `social.md`, `values.md`, `narrative.md`)

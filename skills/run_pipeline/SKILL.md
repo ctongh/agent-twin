@@ -25,16 +25,16 @@ When invoked, accept arguments or ask the user for:
 
 | Input | Description | Default |
 |-------|-------------|---------|
-| `session_id` | The session to analyze | the most recently modified session under `personalized/saves/session/` |
+| `session_id` | The session to analyze | the most recently modified session under `${AGENT_TWIN_DATA}/personalized/saves/session/` |
 | `context_background` | Optional one-paragraph context (role, life stage). Avoid identifying details. | empty |
 | `subject_id` | Short label for the user_profile.md title | `Subject` |
 | `max_iterations` | Cap on Phase 1 audit loop | `3` |
 
 The skill auto-resolves:
-- `input_path` → `personalized/saves/session/<session_id>/annotated.txt`
-- `source_json_path` → `personalized/saves/session/<session_id>/conversation.json`
-- `analyses_dir` → `personalized/saves/session/<session_id>/analyses/`
-- `profile_dir` → `personalized/results/profile/`
+- `input_path` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt`
+- `source_json_path` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json`
+- `analyses_dir` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/analyses/`
+- `profile_dir` → `${AGENT_TWIN_DATA}/personalized/results/profile/`
 - `agent_prompts_dir` → `${CLAUDE_PLUGIN_ROOT}/agents/`
 - `build_timestamp` → today's ISO-8601 date
 
@@ -42,15 +42,15 @@ The skill auto-resolves:
 
 **Pre-check: is there data to analyze?**
 
-If `personalized/saves/session/` has no subdirectories containing `conversation.json`, stop and tell the user — in their language — to run `/counselor` first. Do not launch it automatically.
+If `${AGENT_TWIN_DATA}/personalized/saves/session/` has no subdirectories containing `conversation.json`, stop and tell the user — in their language — to run `/counselor` first. Do not launch it automatically.
 
 **Counselor reminder (soft):**
 
-If `personalized/results/profile/behavior_brief.md` does not yet exist, add one short informational line suggesting they run `/counselor` at least once for better analysis quality. Do not block on this.
+If `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` does not yet exist, add one short informational line suggesting they run `/counselor` at least once for better analysis quality. Do not block on this.
 
 **Build the queue:**
 
-Scan every subdirectory under `personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`). Apply this logic:
+Scan every subdirectory under `${AGENT_TWIN_DATA}/personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`). Apply this logic:
 
 | Condition | Action |
 |-----------|--------|
@@ -69,18 +69,18 @@ If the queue is empty, tell the user everything is already up to date.
 
 **Directory setup:**
 
-Pre-create `personalized/results/profile/analyses/`, `knowledge_graph/concepts/`, `knowledge_graph/emotions/`, `knowledge_graph/people/`, `knowledge_graph/events/`, and `behavioral_model/` before dispatching any agents.
+Pre-create `${AGENT_TWIN_DATA}/personalized/results/profile/analyses/`, `knowledge_graph/concepts/`, `knowledge_graph/emotions/`, `knowledge_graph/people/`, `knowledge_graph/events/`, and `behavioral_model/` before dispatching any agents.
 
 ## Step 1.5 — Per-session annotated.txt
 
 For **each session in the queue**, check if `annotated.txt` exists.
 
 - If it exists: proceed.
-- If missing: generate it by reading `conversation.json` and inserting sequential topic cluster headers (`[Cluster 01]`, `[Cluster 02]`, …) every 5–8 turns based on topic shifts. Tell the user — in their language — what you are doing and that it will continue automatically. Write to `personalized/saves/session/<session_id>/annotated.txt`.
+- If missing: generate it by reading `conversation.json` and inserting sequential topic cluster headers (`[Cluster 01]`, `[Cluster 02]`, …) every 5–8 turns based on topic shifts. Tell the user — in their language — what you are doing and that it will continue automatically. Write to `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt`.
 
 ## Step 1.6 — Pipeline state check (checkpoint / resume)
 
-Each session has its own state file at `personalized/saves/session/<session_id>/pipeline_state.json`.
+Each session has its own state file at `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/pipeline_state.json`.
 
 **Schema:**
 ```json
@@ -98,7 +98,7 @@ Each session has its own state file at `personalized/saves/session/<session_id>/
 }
 ```
 
-Note: `analysts` is the only phase tracked per-session. The global phases (meta-critic, synthesis, phase2, phase3, phase4, final) are tracked in a **separate global state file** at `personalized/results/profile/pipeline_state.json` (same schema structure, `session_id` field contains the most recently processed session).
+Note: `analysts` is the only phase tracked per-session. The global phases (meta-critic, synthesis, phase2, phase3, phase4, final) are tracked in a **separate global state file** at `${AGENT_TWIN_DATA}/personalized/results/profile/pipeline_state.json` (same schema structure, `session_id` field contains the most recently processed session).
 
 **Per-session state update protocol:**
 - Before generating annotated.txt: set `annotated_txt` → `in_progress`
@@ -224,8 +224,8 @@ The synthesis-builder writes both files directly: `synthesis.md` for downstream 
 **After synthesis completes — end of per-session analyst loop:**
 
 Save each analyst's returned report to both:
-- `personalized/saves/session/<session_id>/analyses/<short-name>.md` (session-specific copy for traceability)
-- `personalized/results/profile/analyses/<short-name>.md` (cumulative — overwrite with this updated version)
+- `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/analyses/<short-name>.md` (session-specific copy for traceability)
+- `${AGENT_TWIN_DATA}/personalized/results/profile/analyses/<short-name>.md` (cumulative — overwrite with this updated version)
 
 Update session state: set `analysts` → `complete`, `conversation_turns_at_analysis` = current turn count, `phase1_iterations` = N, `phase1_escalated` = true/false.
 

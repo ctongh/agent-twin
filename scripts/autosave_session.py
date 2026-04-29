@@ -19,13 +19,22 @@ def extract_text_from_content(content):
     return str(content) if content else ""
 
 
+DATA_ROOT = Path.home() / ".claude" / "agent-twin"
+
+
+def ensure_data_dirs():
+    (DATA_ROOT / "personalized" / "saves" / "session").mkdir(parents=True, exist_ok=True)
+    (DATA_ROOT / "personalized" / "results" / "profile").mkdir(parents=True, exist_ok=True)
+
+
 def debug_log(msg: str):
-    log_path = Path(__file__).parent.parent / "autosave_debug.log"
+    log_path = DATA_ROOT / "autosave_debug.log"
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(f"{datetime.now().isoformat()} {msg}\n")
 
 
 def main():
+    ensure_data_dirs()
     debug_log("hook invoked")
 
     try:
@@ -55,9 +64,7 @@ def main():
         debug_log(f"no JSONL found for session {session_id} under {claude_projects}")
         return
 
-    # Resolve output dir relative to this script's location (scripts/ → project root)
-    project_root = Path(__file__).parent.parent
-    saves_base = project_root / "personalized" / "saves" / "session"
+    saves_base = DATA_ROOT / "personalized" / "saves" / "session"
     session_prefix = session_id[:8]
 
     # Reuse the existing directory for this session if one exists (handles cross-day sessions).

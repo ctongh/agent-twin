@@ -32,7 +32,7 @@ If the JSONL cannot be located (file moved, Claude Code internals changed), fall
 ## Step 2 — Create the session directory
 
 ```
-personalized/saves/session/<save-session-id>/
+${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/
 ```
 
 If the directory already exists, that is expected (this is an overwrite). Do not delete the directory or other files within it; only the files this skill writes (`conversation.json`, optionally `annotated.txt`) get overwritten.
@@ -48,7 +48,7 @@ echo '{"session_id": "<SESSION_ID>"}' | python scripts/autosave_session.py
 The script will:
 1. Locate the JSONL file under `~/.claude/projects/` using the session ID
 2. Extract user/assistant text turns (skipping tool calls and system events)
-3. Write `conversation.json` to `personalized/saves/session/<save-session-id>/`
+3. Write `conversation.json` to `${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/`
 
 **Do not write a new script inline.** Always use `scripts/autosave_session.py`.
 
@@ -72,7 +72,7 @@ The point is to preserve the user side of the conversation losslessly (the analy
 Write `conversation.json` to:
 
 ```
-personalized/saves/session/<save-session-id>/conversation.json
+${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/conversation.json
 ```
 
 If the session is large enough to skip annotation in this skill (it would consume considerable tokens), produce `conversation.json` only and tell the user that `annotated.txt` will be produced when they next run the analysis pipeline. If the session is small (< 100,000 chars), proceed to Step 6 and produce `annotated.txt` here.

@@ -9,7 +9,7 @@ When invoked, detect which mode applies and begin the conversation immediately.
 
 ## Mode detection
 
-Check whether `personalized/saves/session/` contains any subdirectories.
+Check whether `${AGENT_TWIN_DATA}/personalized/saves/session/` contains any subdirectories.
 
 - **No subdirectories found** (or directory does not exist) → **Questionnaire mode**
 - **Subdirectories found** → **Companion mode**
@@ -55,8 +55,8 @@ After question 10 (or when the user signals they're done), close with:
 ## Companion mode (returning user)
 
 Read the following files if they exist:
-- `personalized/results/profile/behavior_brief.md` — for current understanding of this person
-- `personalized/results/profile/system_of_values.md` — for deeper context if needed
+- `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` — for current understanding of this person
+- `${AGENT_TWIN_DATA}/personalized/results/profile/system_of_values.md` — for deeper context if needed
 
 Do **not** mention that you read these files. Use the context to be natural, not to demonstrate analysis.
 
