@@ -27,27 +27,17 @@ def ensure_data_dirs():
     (DATA_ROOT / "personalized" / "results" / "profile").mkdir(parents=True, exist_ok=True)
 
 
-def debug_log(msg: str):
-    log_path = DATA_ROOT / "autosave_debug.log"
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(f"{datetime.now().isoformat()} {msg}\n")
-
-
 def main():
     ensure_data_dirs()
-    debug_log("hook invoked")
 
     try:
         raw_stdin = sys.stdin.read()
-        debug_log(f"stdin: {raw_stdin[:200]}")
         data = json.loads(raw_stdin)
         session_id = data.get("session_id", "")
-    except Exception as e:
-        debug_log(f"stdin parse error: {e}")
+    except Exception:
         return
 
     if not session_id:
-        debug_log("no session_id")
         return
 
     # Find the JSONL file across all project dirs under ~/.claude/projects/
@@ -61,7 +51,6 @@ def main():
                 break
 
     if not jsonl_file:
-        debug_log(f"no JSONL found for session {session_id} under {claude_projects}")
         return
 
     saves_base = DATA_ROOT / "personalized" / "saves" / "session"

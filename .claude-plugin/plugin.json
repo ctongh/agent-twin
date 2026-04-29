@@ -17,5 +17,6 @@
     "pipeline",
     "self-knowledge"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "hooks": "./hooks/hooks.json"
 }

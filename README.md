@@ -17,6 +17,20 @@ agent-twin analyzes how you actually think, communicate, and make decisions. It 
 
 ---
 
+## Requirements
+
+Python 3.8+ is required for the autosave Stop hook and the `/save_session` skill. Without Python, those features become silent no-ops (the hook never fires; the skill surfaces an error). Everything else — the analysis pipeline, `/load_persona`, `/show_persona`, `/counselor` — works without Python.
+
+Install Python:
+
+- **Windows**: download from https://www.python.org/downloads/ (the official installer enables both `python` and `py` on PATH); or `winget install Python.Python.3.12`
+- **macOS**: `brew install python` (Homebrew); the system `python3` also works on macOS 12+
+- **Linux**: `sudo apt install python3` (Debian/Ubuntu) or `sudo dnf install python3` (Fedora)
+
+Verify with `python --version` (expect `Python 3.x.x`). No external Python packages are needed.
+
+---
+
 ## Commands
 
 | What you're doing | Command | Key outcome |

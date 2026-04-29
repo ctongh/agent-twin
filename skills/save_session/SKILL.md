@@ -39,6 +39,8 @@ If the directory already exists, that is expected (this is an overwrite). Do not
 
 ## Step 3 — Run the extraction script
 
+**Preflight: check Python is available.** If neither `python --version` nor `py --version` succeeds, tell the user: "Python 3.8+ is required for /save_session. See README Requirements section for install instructions." Then stop without erroring.
+
 The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the session JSON piped in:
 
 ```bash
