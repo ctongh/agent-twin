@@ -9,8 +9,8 @@ When this skill is invoked, walk the user through extracting a Gemini conversati
 
 | File | Purpose |
 |------|---------|
-| `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json` | Raw turn-by-turn capture |
-| `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt` | Same content with topic-cluster headers |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json` | Raw turn-by-turn capture |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt` | Same content with topic-cluster headers |
 
 The format spec lives in `skills/extract_gemini/TEMPLATE.md`. Real samples live in `skills/extract_gemini/samples/`.
 
@@ -25,14 +25,14 @@ python -c "import uuid; print(uuid.uuid4().hex[:8])"
 Create the directory:
 
 ```
-${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/
+$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/
 ```
 
 Tell the user the session ID you generated.
 
 ### Existing-directory handling
 
-The hex GUID makes collision essentially impossible, but a re-extract on the same day can collide if the user reuses an ID intentionally. Before writing into an existing `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/`:
+The hex GUID makes collision essentially impossible, but a re-extract on the same day can collide if the user reuses an ID intentionally. Before writing into an existing `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/`:
 
 1. If the directory exists and contains files (`conversation.json`, `annotated.txt`, or an `analyses/` subdir), **stop** and ask the user. Two acceptable choices:
    - **Generate a fresh session ID** (default; safer). Re-run Step 1 with a new GUID. Any prior pipeline outputs at the old ID are preserved untouched.
@@ -62,7 +62,7 @@ You can read the actual scraper at `skills/extract_gemini/scraper.js` and paste 
 Ask the user to confirm the file downloaded. Then move it to the session directory:
 
 ```bash
-mv ~/Downloads/gemini-conversation.json ${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json
+mv ~/Downloads/gemini-conversation.json $HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json
 ```
 
 (Adjust the source path for the user's OS.)
@@ -73,7 +73,7 @@ Check the JSON against the expected shape:
 
 ```python
 import json, sys
-with open('${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json') as f:
+with open('$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json') as f:
     data = json.load(f)
 assert isinstance(data, list)
 assert all('order' in t and 'user' in t and 'model' in t for t in data)

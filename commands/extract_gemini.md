@@ -3,8 +3,8 @@ description: Capture a Gemini share-link conversation and prepare it (with topic
 argument-hint: [optional Gemini share URL]
 ---
 
-Execute the agent-twin `extract_gemini` skill. Follow the SKILL.md below exactly, step by step.
+# /extract_gemini
 
-If `$ARGUMENTS` is non-empty, treat it as the Gemini share URL the user wants to capture (skip asking for it in Step 2). Otherwise ask the user for the URL as the skill directs.
+Capture a Gemini share-link conversation and produce the conversation files the analysis pipeline expects.
 
-@${CLAUDE_PLUGIN_ROOT}/skills/extract_gemini/SKILL.md
+To execute, invoke the `extract_gemini` skill via the Skill tool. See `skills/extract_gemini/SKILL.md` for the full specification.

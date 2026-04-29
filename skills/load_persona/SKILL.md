@@ -5,13 +5,13 @@ description: Load the user's behavior brief (behavior_brief.md) into the current
 
 # load_persona
 
-When invoked, read the behavior brief at `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` and from that point forward let it shape every response in the session.
+When invoked, read the behavior brief at `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` and from that point forward let it shape every response in the session.
 
 This skill is invoked **explicitly** — the persona must not auto-load, so the before/after difference is perceptible.
 
 ## What this skill reads
 
-A single file: `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md`.
+A single file: `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md`.
 
 This file is the output of the `behavior-brief-generator` agent (the final stage of `/run_pipeline`). It is a ≤80-line instruction set written entirely from Claude's perspective, with four sections:
 
@@ -24,13 +24,13 @@ The detailed batch-layer products (`system_of_values.md`, `cognitive_patterns.md
 
 ## Step 1 — Read behavior_brief.md
 
-Read the file at `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md`.
+Read the file at `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md`.
 
 If the file does not exist, report:
 
 > `behavior_brief.md` does not exist yet. Run `/run_pipeline` on a captured session first, then invoke `/load_persona` again.
 
-If the file exists but is older than the most recent session under `${AGENT_TWIN_DATA}/personalized/saves/session/`, surface a soft warning:
+If the file exists but is older than the most recent session under `$HOME/.claude/agent-twin/personalized/saves/session/`, surface a soft warning:
 
 > The behavior brief is older than your most recent saved session. Consider re-running `/run_pipeline` to update it.
 
@@ -42,7 +42,7 @@ Write one short line to confirm the brief is active:
 
 > Write one brief line — in the user's language — confirming the brief is now active. Keep it low-key; the persona should be felt, not announced.
 
-Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can read `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` directly.
+Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can read `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` directly.
 
 From this point, every response in the session should follow the instructions in the brief. The **禁區** section takes highest priority.
 

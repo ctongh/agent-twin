@@ -5,9 +5,9 @@ description: Run the full agent-twin analysis pipeline on a saved session. Dispa
 
 # run_pipeline
 
-This skill is the single user-facing entry point for the batch layer. It runs the entire pipeline end-to-end: Phase 1 audited analysis → synthesis → Phase 2/3/4 builds → final compression to `user_profile.md`.
+This skill is the single user-facing entry point for the batch layer. It runs the entire pipeline end-to-end: Phase 1 audited analysis → synthesis → Phase 2/3/4 builds → final compression to `behavior_brief.md`.
 
-The skill **executes** the orchestration protocol defined in `methodology/orchestration_protocol.md` directly at the top level of the conversation, because Claude Code's general-purpose subagents do not have access to the `Task` tool — so the orchestration cannot be delegated to a single subagent. The skill is the runner; the protocol document describes the steps; the actual analysts/builders are real Claude Code subagents at `${CLAUDE_PLUGIN_ROOT}/agents/<name>.md`.
+The skill **executes** the orchestration directly at the top level of the conversation, because Claude Code's general-purpose subagents do not have access to the `Task` tool — so the orchestration cannot be delegated to a single subagent. The skill is the runner; the actual analysts/builders are real Claude Code subagents at `${CLAUDE_PLUGIN_ROOT}/agents/<name>.md`.
 
 ## When to use this vs. other skills
 
@@ -25,16 +25,16 @@ When invoked, accept arguments or ask the user for:
 
 | Input | Description | Default |
 |-------|-------------|---------|
-| `session_id` | The session to analyze | the most recently modified session under `${AGENT_TWIN_DATA}/personalized/saves/session/` |
+| `session_id` | The session to analyze | the most recently modified session under `$HOME/.claude/agent-twin/personalized/saves/session/` |
 | `context_background` | Optional one-paragraph context (role, life stage). Avoid identifying details. | empty |
-| `subject_id` | Short label for the user_profile.md title | `Subject` |
+| `subject_id` | Short label for the behavior_brief.md title | `Subject` |
 | `max_iterations` | Cap on Phase 1 audit loop | `3` |
 
 The skill auto-resolves:
-- `input_path` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt`
-- `source_json_path` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json`
-- `analyses_dir` → `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/analyses/`
-- `profile_dir` → `${AGENT_TWIN_DATA}/personalized/results/profile/`
+- `input_path` → `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt`
+- `source_json_path` → `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json`
+- `analyses_dir` → `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/analyses/`
+- `profile_dir` → `$HOME/.claude/agent-twin/personalized/results/profile/`
 - `agent_prompts_dir` → `${CLAUDE_PLUGIN_ROOT}/agents/`
 - `build_timestamp` → today's ISO-8601 date
 
@@ -42,15 +42,15 @@ The skill auto-resolves:
 
 **Pre-check: is there data to analyze?**
 
-If `${AGENT_TWIN_DATA}/personalized/saves/session/` has no subdirectories containing `conversation.json`, stop and tell the user — in their language — to run `/counselor` first. Do not launch it automatically.
+If `$HOME/.claude/agent-twin/personalized/saves/session/` has no subdirectories containing `conversation.json`, stop and tell the user — in their language — to run `/counselor` first. Do not launch it automatically.
 
 **Counselor reminder (soft):**
 
-If `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` does not yet exist, add one short informational line suggesting they run `/counselor` at least once for better analysis quality. Do not block on this.
+If `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` does not yet exist, add one short informational line suggesting they run `/counselor` at least once for better analysis quality. Do not block on this.
 
 **Build the queue:**
 
-Scan every subdirectory under `${AGENT_TWIN_DATA}/personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`). Apply this logic:
+Scan every subdirectory under `$HOME/.claude/agent-twin/personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`). Apply this logic:
 
 | Condition | Action |
 |-----------|--------|
@@ -69,18 +69,18 @@ If the queue is empty, tell the user everything is already up to date.
 
 **Directory setup:**
 
-Pre-create `${AGENT_TWIN_DATA}/personalized/results/profile/analyses/`, `knowledge_graph/concepts/`, `knowledge_graph/emotions/`, `knowledge_graph/people/`, `knowledge_graph/events/`, and `behavioral_model/` before dispatching any agents.
+Pre-create `$HOME/.claude/agent-twin/personalized/results/profile/analyses/`, `knowledge_graph/concepts/`, `knowledge_graph/emotions/`, `knowledge_graph/people/`, `knowledge_graph/events/`, and `behavioral_model/` before dispatching any agents.
 
 ## Step 1.5 — Per-session annotated.txt
 
 For **each session in the queue**, check if `annotated.txt` exists.
 
 - If it exists: proceed.
-- If missing: generate it by reading `conversation.json` and inserting sequential topic cluster headers (`[Cluster 01]`, `[Cluster 02]`, …) every 5–8 turns based on topic shifts. Tell the user — in their language — what you are doing and that it will continue automatically. Write to `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt`.
+- If missing: generate it by reading `conversation.json` and inserting sequential topic cluster headers (`[Cluster 01]`, `[Cluster 02]`, …) every 5–8 turns based on topic shifts. Tell the user — in their language — what you are doing and that it will continue automatically. Write to `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt`.
 
 ## Step 1.6 — Pipeline state check (checkpoint / resume)
 
-Each session has its own state file at `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/pipeline_state.json`.
+Each session has its own state file at `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/pipeline_state.json`.
 
 **Schema:**
 ```json
@@ -98,7 +98,7 @@ Each session has its own state file at `${AGENT_TWIN_DATA}/personalized/saves/se
 }
 ```
 
-Note: `analysts` is the only phase tracked per-session. The global phases (meta-critic, synthesis, phase2, phase3, phase4, final) are tracked in a **separate global state file** at `${AGENT_TWIN_DATA}/personalized/results/profile/pipeline_state.json` (same schema structure, `session_id` field contains the most recently processed session).
+Note: `analysts` is the only phase tracked per-session. The global phases (meta-critic, synthesis, phase2, phase3, phase4, final) are tracked in a **separate global state file** at `$HOME/.claude/agent-twin/personalized/results/profile/pipeline_state.json` (same schema structure, `session_id` field contains the most recently processed session).
 
 **Per-session state update protocol:**
 - Before generating annotated.txt: set `annotated_txt` → `in_progress`
@@ -122,11 +122,7 @@ Print a brief notice — in the user's language — that covers:
 
 Then proceed immediately to Step 3.
 
-## Step 3 — Read the orchestration protocol
-
-Read `methodology/orchestration_protocol.md`. This is the protocol you (the skill, executing at top-level) will follow. The variable values resolved in Step 1 are the ones the protocol references.
-
-## Step 4 — Execute the protocol at top-level
+## Step 3 — Execute the protocol at top-level
 
 Each Task dispatch uses:
 - `subagent_type`: matches the `name:` field in the agent's frontmatter
@@ -224,8 +220,8 @@ The synthesis-builder writes both files directly: `synthesis.md` for downstream 
 **After synthesis completes — end of per-session analyst loop:**
 
 Save each analyst's returned report to both:
-- `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/analyses/<short-name>.md` (session-specific copy for traceability)
-- `${AGENT_TWIN_DATA}/personalized/results/profile/analyses/<short-name>.md` (cumulative — overwrite with this updated version)
+- `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/analyses/<short-name>.md` (session-specific copy for traceability)
+- `$HOME/.claude/agent-twin/personalized/results/profile/analyses/<short-name>.md` (cumulative — overwrite with this updated version)
 
 Update session state: set `analysts` → `complete`, `conversation_turns_at_analysis` = current turn count, `phase1_iterations` = N, `phase1_escalated` = true/false.
 
@@ -301,13 +297,13 @@ Verify `<profile_dir>/behavior_brief.md` exists and is ≤80 lines. Update state
 
 The full pipeline run is long (~10 minutes typical for a single session). Inform the user that the dispatch has started and report progress between phase boundaries.
 
-## Step 5 — Surface the execution log
+## Step 4 — Surface the execution log
 
 When all phases complete, surface to the user:
 
 1. **Phase 1 result** — iterations completed, escalation flag, per-analyst final verdict
 2. **Per-phase product paths** — system_of_values.md, cognitive_patterns.md, knowledge_graph/, behavioral_model/
-3. **user_profile.md** — line count, path
+3. **behavior_brief.md** — line count, path
 4. **Any caveats** from the synthesis Pipeline Caveats section
 
 Example surface format:
@@ -331,7 +327,7 @@ Caveats:
 Next: invoke /load_persona in a new conversation to make the profile active.
 ```
 
-## Step 6 — Suggest next action
+## Step 5 — Suggest next action
 
 Based on the result:
 
@@ -354,12 +350,12 @@ Based on the result:
 
 ## Why this skill exists
 
-The orchestration protocol is one document; running the pipeline manually means resolving every variable, reading the protocol, and issuing every Task call by hand. This skill collapses that to a single invocation. It is the natural Claude Code idiom: skills hide complexity behind a one-line user-facing entry point.
+Running the pipeline manually means resolving every variable, dispatching every analyst, running the meta-critic loop, dispatching the synthesis-builder, then the three downstream builders, then the brief generator — by hand. This skill collapses that to a single invocation. It is the natural Claude Code idiom: skills hide complexity behind a one-line user-facing entry point.
 
 **Why the skill, not an agent, is the runner**: Claude Code subagents do not have access to the `Task` tool. If the orchestration were delegated to a subagent, that subagent could not fan out parallel sub-dispatches — it would have to role-play all four analysts in a single context, losing the cross-agent triangulation that justifies the four-frame design. Skills run at the top-level conversation context, where `Task` is available, so the skill can issue real parallel dispatches against real Claude Code subagents (one fresh context per analyst, with its own system prompt and tool restrictions).
 
 ## Out of scope
 
 - Incremental pipeline runs (rebuilding only one phase) — for now, the pipeline always runs end-to-end. Incremental dispatch is a planned roadmap item.
-- Cross-session integration — when multiple sessions exist, this skill currently runs per-session. Cross-session merge is a planned roadmap item; see `methodology/pipeline.md` § Cross-session integration.
+- Cross-session integration — when multiple sessions exist, this skill currently runs per-session. Cross-session merge is a planned roadmap item.
 - Auto-loading the profile after build — by design, `/load_persona` must be invoked explicitly so the user perceives the before/after difference.

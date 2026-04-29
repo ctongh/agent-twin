@@ -4,31 +4,48 @@ This project is a **Claude Code plugin** that builds a structured persona profil
 
 ---
 
-## `${CLAUDE_PLUGIN_ROOT}`
+## Source-of-truth regime
 
-Whenever a skill, agent, or methodology file references `${CLAUDE_PLUGIN_ROOT}`, substitute the **absolute path to the directory containing this CLAUDE.md file** (the project root).
+**SKILL.md files are the single source of truth.** Each command (`commands/<name>.md`) is a thin router that points at its corresponding `skills/<name>/SKILL.md`. The SKILL is the spec. `methodology/` contains design rationale only; nothing in `methodology/` instructs execution.
+
+If you find a contradiction between `methodology/`, `commands/`, and a SKILL.md, the SKILL.md wins.
 
 ---
 
-## `${AGENT_TWIN_DATA}`
+## `${CLAUDE_PLUGIN_ROOT}`
 
-All user data lives under this root. Always resolves to `~/.claude/agent-twin` — **outside** the versioned plugin cache, so data survives plugin updates.
+Whenever a skill or agent file references `${CLAUDE_PLUGIN_ROOT}`, substitute the **absolute path to the directory containing this CLAUDE.md file** (the plugin root). Claude Code natively expands this token at runtime.
 
-Whenever a skill references a `personalized/` path, it is relative to `${AGENT_TWIN_DATA}`. Full form: `~/.claude/agent-twin/personalized/...`.
+---
+
+## User data root
+
+All user-generated data (captured sessions, analyses, profiles) lives at:
+
+`$HOME/.claude/agent-twin/personalized/`
+
+Why this path: it's in HOME (not the plugin cache), so it survives plugin updates. Never write user data anywhere else.
+
+SKILLs must resolve `$HOME` to an absolute path before calling Read/Write/Edit/Glob tools (those require absolute paths). The standard pattern:
+
+```bash
+DATA_ROOT="$(bash -c 'echo $HOME')/.claude/agent-twin/personalized"
+```
+
+Then use `$DATA_ROOT/...` for absolute paths. The Python autosave script uses `Path.home()` directly — already correct.
 
 ---
 
 ## Available skills
 
-Seven slash commands are defined under `commands/`. Each one routes to a `SKILL.md` file:
+Six slash commands are defined under `commands/`. Each one routes to a `SKILL.md` file. (A seventh, `/counselor`, is implemented in `skills/counselor/SKILL.md` but does not yet have a router under `commands/` — it is added in a follow-up commit.)
 
 | Command | SKILL.md | Purpose |
 |---|---|---|
 | `/extract_gemini` | `skills/extract_gemini/SKILL.md` | Import a Gemini conversation via share link |
 | `/save_session` | `skills/save_session/SKILL.md` | Snapshot the current Claude Code session |
-| `/counselor` | `skills/counselor/SKILL.md` | Guided questionnaire or contextual companion |
 | `/run_pipeline` | `skills/run_pipeline/SKILL.md` | Run the full 4-phase analysis pipeline |
-| `/load_persona` | `skills/load_persona/SKILL.md` | Load the compiled profile brief into this session |
+| `/load_persona` | `skills/load_persona/SKILL.md` | Load the compiled brief silently into this session |
 | `/run_meta_critic` | `skills/run_meta_critic/SKILL.md` | Standalone quality audit of existing analyses |
 | `/validate_pipeline` | `skills/validate_pipeline/SKILL.md` | Check methodology compliance |
 
@@ -59,17 +76,17 @@ Ten subagent definitions live under `agents/`. They are dispatched by `/run_pipe
 CAPTURE → ANNOTATE → PHASE 1 → PHASE 2 → PHASE 3 → PHASE 4 → COMPRESS → LOAD
 ```
 
-- **Capture**: `/extract_gemini`, `/save_session`, or `/counselor` → `${AGENT_TWIN_DATA}/personalized/saves/session/<date>_<id>/`
+- **Capture**: `/extract_gemini`, `/save_session`, or `/counselor` → `$HOME/.claude/agent-twin/personalized/saves/session/<date>_<id>/`
 - **Phase 1**: Four analysts in parallel → meta-critic audit loop (max 3 iterations) → synthesis
 - **Phase 2–4**: Deterministic expansions of Phase 1 findings (cognitive patterns, knowledge graph, behavioral model)
-- **Compress**: `behavior-brief-generator` → `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` (≤80 lines)
+- **Compress**: `behavior-brief-generator` → `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` (≤80 lines)
 - **Load**: `/load_persona` reads the brief and silently shapes every response in this session
 
 ---
 
 ## Key conventions
 
-**`${AGENT_TWIN_DATA}/personalized/` is the user data root.** Never commit anything under that directory. All user data (sessions, analyses, profiles) lives at `~/.claude/agent-twin/personalized/` and must stay local.
+**`$HOME/.claude/agent-twin/personalized/` is the user data root.** Never commit anything under that directory. All user data (sessions, analyses, profiles) lives there and must stay local.
 
 **`/run_pipeline` runs at top level.** Subagents cannot use the `Task` tool, so the skill itself is the orchestrator. It dispatches all 10 agents as real Claude Code subagents from the top-level conversation context.
 
@@ -89,13 +106,10 @@ CAPTURE → ANNOTATE → PHASE 1 → PHASE 2 → PHASE 3 → PHASE 4 → COMPRES
 
 | File | What it defines |
 |---|---|
-| `methodology/pipeline.md` | Architecture overview, invariants, data bias notes |
-| `methodology/orchestration_protocol.md` | Step-by-step protocol executed by `/run_pipeline` |
-| `methodology/output_contract_schema.md` | Contract format applied by the meta-critic |
-| `methodology/phase1_value_extraction.md` | Why four frames; output structure; quality criteria |
-| `methodology/phase2_cognitive_patterns.md` | Six cognitive dimensions; pitfalls |
-| `methodology/phase3_knowledge_graph.md` | Node types, edge types, quality rules |
-| `methodology/phase4_behavioral_model.md` | BP file format, intensity stratification, evidence rules |
+| `methodology/design_notes.md` | Architectural rationale: why four phases, why only Phase 1 is audited, the AI-anchoring filter, the evidence hierarchy. Not executable. |
+| `methodology/output_contract_schema.md` | Contract format applied by the meta-critic at runtime. |
+
+For execution details, read `skills/<name>/SKILL.md`. For agent behavior, read `agents/<name>.md`.
 
 ---
 
@@ -105,13 +119,13 @@ CAPTURE → ANNOTATE → PHASE 1 → PHASE 2 → PHASE 3 → PHASE 4 → COMPRES
 Plugin code (${CLAUDE_PLUGIN_ROOT}):
 agent-twin/
 ├── agents/          # 10 subagent system prompts
-├── commands/        # 7 slash command entry points
-├── methodology/     # Design specs and protocol documents
+├── commands/        # 6 slash command routers (one-line dispatch to skill)
+├── methodology/     # design_notes.md + output_contract_schema.md only
 ├── scripts/         # autosave_session.py (Stop hook)
-└── skills/          # 7 SKILL.md files (one per command)
+└── skills/          # 7 SKILL.md files (the source of truth for each command)
 
-User data (${AGENT_TWIN_DATA} = ~/.claude/agent-twin):
-~/.claude/agent-twin/
+User data ($HOME/.claude/agent-twin):
+$HOME/.claude/agent-twin/
 └── personalized/    # ← all user data lives here (never committed)
     ├── saves/session/<date>_<id>/   # Captured conversations
     └── results/profile/             # Compiled persona products

@@ -2,10 +2,8 @@
 description: Snapshot the current Claude Code conversation into the agent-twin project (idempotent; overwrites the same session)
 ---
 
-Execute the agent-twin `save_session` skill. Follow the SKILL.md below exactly.
+# /save_session
 
-Resolve the session ID deterministically from the active Claude Code JSONL as Step 1 specifies — do not generate a fresh GUID unless the JSONL truly cannot be located.
+Snapshot the current Claude Code conversation into the agent-twin project so it can be analyzed later by the batch pipeline.
 
-This command takes no arguments. If `$ARGUMENTS` is non-empty, treat it only as a hint for the user's intent and ignore it for the actual ID derivation.
-
-@${CLAUDE_PLUGIN_ROOT}/skills/save_session/SKILL.md
+To execute, invoke the `save_session` skill via the Skill tool. See `skills/save_session/SKILL.md` for the full specification.

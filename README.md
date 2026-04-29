@@ -225,13 +225,13 @@ agent-twin/
 │   ├── run_meta_critic/                 #   QA: standalone audit
 │   └── validate_pipeline/               #   QA: methodology compliance
 │
-├── commands/                            # 7 slash command entry points
-├── methodology/                         # Pipeline specs and design docs
+├── commands/                            # 6 slash command routers
+├── methodology/                         # Design notes + output contract schema
 ├── scripts/
 │   └── autosave_session.py              # Stop hook: capture on session exit
 │
-├── .claude/
-│   └── settings.json                    # Autosave hook configuration
+├── hooks/
+│   └── hooks.json                       # Autosave hook configuration
 │
 ├── CLAUDE.md                            # Project context for Claude Code
 │

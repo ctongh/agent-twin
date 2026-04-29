@@ -29,12 +29,11 @@ Read the synthesis and all four analyst reports in full before producing nodes.
 
 ## Methodology
 
-The Phase 3 methodology document (`methodology/phase3_knowledge_graph.md`) defines:
+Phase 3 uses a fixed taxonomy:
 - Four node types: `Concept`, `Emotion`, `Person`, `Event`
 - Seven edge types: `tension`, `cause`, `derives`, `contradicts`, `reinforces`, `weakens`, `stands_for`
-- The frontmatter schema and node template
 
-Follow that document's templates exactly.
+The node frontmatter schema and node template are defined in the **Output** section of this file. Follow that template exactly.
 
 ### Workflow
 
@@ -42,7 +41,7 @@ Follow that document's templates exactly.
 
 **Step 2 — Categorize.** Each node belongs in exactly one of `concepts/`, `emotions/`, `people/`, `events/`. Borderline cases default to `concepts/`.
 
-**Step 3 — Generate node files.** Use the template in `phase3_knowledge_graph.md`. Populate frontmatter from the analyst reports:
+**Step 3 — Generate node files.** Use the node template in the **Output** section below. Populate frontmatter from the analyst reports:
 
 **Filename format:** `{type}_{title}.md` where `{type}` is the directory name (`concept`, `emotion`, `people`, `event`) and `{title}` is the node's title in the subject's own script — use their exact phrasing, never romanize or transliterate native characters (e.g., write `concept_邏輯閉環.md`, not `concept_luoji-bianhuan.md`). Replace spaces with hyphens if needed.
 - `centrality`: 1–5; only mark `5` for nodes referenced by all four analysts. Cap at 5–7 hubs total.
@@ -106,7 +105,79 @@ Write directly into the directory provided as `GRAPH_DIR` with this structure:
     └── ...
 ```
 
-Each node file follows the template in `phase3_knowledge_graph.md`. The README lists category counts, hub nodes, and any orphan nodes flagged for review.
+The README lists category counts, hub nodes, and any orphan nodes flagged for review.
+
+### Node frontmatter schema
+
+```yaml
+---
+type: Concept | Emotion | Person | Event
+first_appeared: <turn id, session id>
+mentions: <integer>
+centrality: 1-5  # estimated structural importance
+stability: stable | context-dependent | evolving
+valence: positive | negative | neutral | mixed
+confidence: high | medium | low
+sessions: [list of session IDs where this surfaces]
+cross_framework_consensus: 0-4  # how many Phase 1 analysts touched it
+---
+```
+
+### Edge type markers
+
+| Edge type | Marker | Meaning |
+|-----------|--------|---------|
+| Tension | `↔ tension` | A and B form a structural pull within the subject |
+| Cause | `→ causes` | A triggers B |
+| Derives | `⇒ derives` | B is an inference or application of A |
+| Contradicts | `× contradicts` | the subject holds both A and B but they are incompatible |
+| Reinforces | `+ reinforces` | A's presence strengthens B |
+| Weakens | `- weakens` | A's presence weakens B |
+| Stands-for | `↦ stands_for` | A is a manifestation or symbol of B |
+
+### Single-node template
+
+```markdown
+---
+type: Concept
+first_appeared: <turn id, session id>
+mentions: 12
+centrality: 5
+stability: stable
+valence: mixed
+confidence: high
+cross_framework_consensus: 4
+sessions: [<session_id_1>, <session_id_2>]
+---
+
+# <node-title>
+
+## Definition
+[A short paragraph defining the concept as the subject uses it. Distinct from a dictionary definition.]
+
+## Related (grouped by edge type)
+
+### Tension
+- [[other-concept-1]] ↔ [why this is a structural tension]
+- [[other-concept-2]] ↔ [...]
+
+### Cause
+- [[trigger-event]] → this concept
+- this concept → [[downstream-effect]]
+
+### Derives
+- this concept ⇒ [[derived-pattern]]
+
+## Representative quotes
+> "..." [<turn>] (<session_id>)
+
+## Turns
+[<turn>][<turn>][<turn>] (<session_id>)
+
+## Notes
+- Cross-framework consensus from Phase 1: [analysts that touched this]
+- Stability over sessions: [what trend, if any]
+```
 
 ## Completion checklist
 

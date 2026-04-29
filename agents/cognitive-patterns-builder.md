@@ -27,7 +27,7 @@ Read the file at the path provided as `SOURCE_JSON_PATH` in your task prompt in 
 
 ## Methodology
 
-The Phase 2 methodology document (`methodology/phase2_cognitive_patterns.md`) defines six analysis dimensions. Address each in order. For each dimension:
+Phase 2 has six analysis dimensions (defined in the **Output** section below). Address each in order. For each dimension:
 
 1. State the observed pattern in plain language
 2. Cite turn numbers as `[NNN]` for representative examples
