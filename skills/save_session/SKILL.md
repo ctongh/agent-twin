@@ -11,9 +11,11 @@ The output schema is documented in `skills/extract_gemini/TEMPLATE.md`. Do not r
 
 ## Step 0 — Preflight: Python availability
 
-This whole skill ultimately depends on Python: Step 3 invokes `scripts/autosave_session.py`, and Step 1's fallback path (when the Claude Code session UUID cannot be resolved from `~/.claude/projects/`) generates a GUID via `python -c "import uuid; print(uuid.uuid4().hex[:12])"`. Verify Python is reachable **before** any Python-dependent operation runs.
+This whole skill ultimately depends on Python: Step 3 invokes `scripts/autosave_session.py`, and Step 1's fallback path (when the Claude Code session UUID cannot be resolved from `~/.claude/projects/`) generates a GUID via `<PYTHON> -c "import uuid; print(uuid.uuid4().hex[:12])"`. Verify Python is reachable **before** any Python-dependent operation runs.
 
 Try `python3 --version` first, then `python --version`, then `py --version` (Windows fallback). Record which command succeeded — Steps 1 and 3 should reuse it. If none succeed, tell the user — in their language — "Python 3.8+ is required for /save_session. See README Requirements section for install instructions." Then stop without erroring; do not proceed to Step 1.
+
+**Throughout this SKILL, `<PYTHON>` is a placeholder for the interpreter you recorded above (one of `python3`, `python`, or `py`). Substitute it before running any command.**
 
 ## Step 1 — Resolve the session ID
 
@@ -33,7 +35,7 @@ On Windows that is typically `C:/Users/<user>/.claude/projects/<encoded-project-
 
 This gives a deterministic mapping: the same Claude Code session always maps to the same save-session ID. Re-invoking the skill in the same session overwrites the previous snapshot rather than producing duplicates.
 
-If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `python -c "import uuid; print(uuid.uuid4().hex[:12])"` and proceed.
+If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `<PYTHON> -c "import uuid; print(uuid.uuid4().hex[:12])"` and proceed.
 
 ## Step 2 — Create the session directory
 
@@ -47,10 +49,10 @@ If the directory already exists, that is expected (this is an overwrite). Do not
 
 The Python preflight is already done in Step 0 — reuse the interpreter (`python3` / `python` / `py`) that succeeded there.
 
-The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the Claude Code session UUID piped in as JSON (prefer `python3` on Linux/macOS; use `py` only as a Windows fallback):
+The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the Claude Code session UUID piped in as JSON, using the `<PYTHON>` interpreter recorded in Step 0:
 
 ```bash
-echo '{"session_id": "<CC_SESSION_UUID>"}' | python3 scripts/autosave_session.py
+echo '{"session_id": "<CC_SESSION_UUID>"}' | <PYTHON> scripts/autosave_session.py
 ```
 
 `<CC_SESSION_UUID>` is the **Claude Code session UUID** — the filename stem of the active `~/.claude/projects/<encoded-project-path>/<UUID>.jsonl` transcript. **It is NOT the `<save-session-id>` (`YYYY-MM-DD_<prefix>`) derived in Step 1.** The script greps for the JSONL by this UUID; passing the save-session-id here will fail to locate any transcript.

@@ -72,7 +72,7 @@ This guide walks through every command in the order you'll actually use them. If
 **How to run**:
 1. Get the public Gemini share link.
 2. Type `/extract_gemini` and paste the link when prompted.
-3. The skill writes the same `conversation.json` + `annotated.txt` pair under `personalized/saves/session/`.
+3. The skill writes the same session files under `personalized/saves/session/`: `conversation.json`, `annotated.txt`, and `session_meta.json`.
 
 <!-- TODO: GIF for /extract_gemini -->
 *[Demo GIF will be added]*
@@ -238,7 +238,7 @@ This guide walks through every command in the order you'll actually use them. If
 
 **How to run**:
 1. From any session in the project, type `/validate_pipeline`.
-2. The skill iterates over every implemented validator under `skills/validate_pipeline/validators/` and reports per-validator pass/fail.
+2. The skill iterates over the implemented entries in the Sub-validators table in `skills/validate_pipeline/SKILL.md` and reports per-validator pass/fail. Discovery is table-driven, not directory-scanning — entries marked `planned` are skipped, and merely dropping a file under `skills/validate_pipeline/validators/` will not enroll it unless its row is in the table.
 
 <!-- TODO: GIF for /validate_pipeline -->
 *[Demo GIF will be added]*
@@ -248,7 +248,7 @@ This guide walks through every command in the order you'll actually use them. If
 **Common gotchas**:
 - This is a contributor-facing surface. End users don't normally need to run it.
 - Failures are usually obvious (a path under `personalized/` got accidentally staged, a contract block went malformed). Fix the root issue, then re-run.
-- New validators only need a front-matter `status: implemented` to be picked up. The umbrella discovers them automatically.
+- When contributing a new validator, don't rely on front matter alone: add the validator file under `skills/validate_pipeline/validators/` and add a row to the Sub-validators table in `skills/validate_pipeline/SKILL.md`, marking it with the appropriate status (`implemented` or `planned`).
 
 **Next step**: Fix any failures, then commit.
 
