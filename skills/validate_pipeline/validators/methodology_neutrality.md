@@ -99,17 +99,17 @@ findings:
 
 ## Examples
 
-**Direct hit (hard)**:
+**Direct hit (hard)** (illustrative):
 ```
-File: methodology/phase4_behavioral_model.md, line 122
+File: agents/behavioral-model-builder.md, line N
 Matched: "對話者可以把最核心的幾個 BP 分享給親近的人（女友、信任的主管）"
 Severity: hard
 Suggestion: replace "女友、信任的主管" with "trusted personal contacts"
 ```
 
-**Inferential (soft)**:
+**Inferential (soft)** (illustrative):
 ```
-File: methodology/phase2_cognitive_patterns.md, lines 11-16
+File: agents/cognitive-patterns-builder.md, lines N-M
 Matched: a list of vocabulary domains naming domain-specific jargon plus introspective
 language pointing toward one professional and psychological background
 Inference: implies a software engineer with strategic-business exposure and a particular

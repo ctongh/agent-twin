@@ -5,13 +5,13 @@ description: Load the user's behavior brief (behavior_brief.md) into the current
 
 # load_persona
 
-When invoked, read the behavior brief at `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` and from that point forward let it shape every response in the session.
+When invoked, read the behavior brief at `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` and from that point forward let it shape every response in the session.
 
 This skill is invoked **explicitly** — the persona must not auto-load, so the before/after difference is perceptible.
 
 ## What this skill reads
 
-A single file: `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md`.
+A single file: `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md`.
 
 This file is the output of the `behavior-brief-generator` agent (the final stage of `/run_pipeline`). It is a ≤80-line instruction set written entirely from Claude's perspective, with four sections:
 
@@ -24,13 +24,13 @@ The detailed batch-layer products (`system_of_values.md`, `cognitive_patterns.md
 
 ## Step 1 — Read behavior_brief.md
 
-Read the file at `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md`.
+Read the file at `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md`.
 
 If the file does not exist, report:
 
 > `behavior_brief.md` does not exist yet. Run `/run_pipeline` on a captured session first, then invoke `/load_persona` again.
 
-If the file exists but is older than the most recent session under `${AGENT_TWIN_DATA}/personalized/saves/session/`, surface a soft warning:
+If the file exists but is older than the most recent session under `$HOME/.claude/agent-twin/personalized/saves/session/`, surface a soft warning:
 
 > The behavior brief is older than your most recent saved session. Consider re-running `/run_pipeline` to update it.
 
@@ -38,11 +38,14 @@ Do not block on the warning — proceed with the existing brief unless the user 
 
 ## Step 2 — Acknowledge and internalize
 
-Write one short line to confirm the brief is active:
+Write one short line to confirm the brief is active, then on a second line surface the audit pointer:
 
-> Write one brief line — in the user's language — confirming the brief is now active. Keep it low-key; the persona should be felt, not announced.
+> Line 1: one brief acknowledgment in the user's language confirming the brief is now active. Keep it low-key; the persona should be felt, not announced.
+> Line 2: a one-line pointer in the same language, equivalent to: *"Use `/show_persona` to inspect what was loaded, or `/show_persona all` to see the full profile."*
 
-Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can read `${AGENT_TWIN_DATA}/personalized/results/profile/behavior_brief.md` directly.
+The audit pointer is intentional — it is the lightest-weight integrity check the system offers. The user always has a one-command path to see exactly what shaped this session, even if they normally won't use it. Do not omit this line.
+
+Do **not** print the brief contents to the conversation. The brief is operational context, not a document to review. If the user wants to inspect it, they can run `/show_persona` (preferred) or read `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` directly.
 
 From this point, every response in the session should follow the instructions in the brief. The **禁區** section takes highest priority.
 
@@ -65,4 +68,5 @@ If the user's global Claude config (`~/.claude/CLAUDE.md` or a project-level `CL
 - [ ] `behavior_brief.md` was read in full
 - [ ] If the file was missing or stale, the user was informed
 - [ ] A one-line acknowledgment was written (brief was NOT printed to conversation)
+- [ ] A `/show_persona` audit pointer was surfaced alongside the acknowledgment
 - [ ] No detailed products were loaded

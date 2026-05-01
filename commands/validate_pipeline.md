@@ -2,10 +2,8 @@
 description: Run the umbrella validator over the agent-twin project (privacy / format / safety checks)
 ---
 
-Execute the agent-twin `validate_pipeline` skill. Follow the SKILL.md below exactly.
+# /validate_pipeline
 
-Run every implemented sub-validator under `${CLAUDE_PLUGIN_ROOT}/skills/validate_pipeline/validators/`, skip ones marked `status: planned`, and aggregate the results into a single umbrella verdict (`pass` / `pass_with_warnings` / `fail`). Report each validator's findings individually — never silently aggregate.
+Run the validators listed as implemented in the Sub-validators table in `skills/validate_pipeline/SKILL.md` and aggregate the results into a single umbrella verdict.
 
-This command takes no arguments.
-
-@${CLAUDE_PLUGIN_ROOT}/skills/validate_pipeline/SKILL.md
+To execute, invoke the `validate_pipeline` skill via the Skill tool. See `skills/validate_pipeline/SKILL.md` for the full specification.

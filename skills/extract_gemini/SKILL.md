@@ -5,34 +5,50 @@ description: Capture a conversation from a Gemini share link and prepare it (wit
 
 # extract_gemini
 
-When this skill is invoked, walk the user through extracting a Gemini conversation and producing the two files the analysis pipeline needs:
+> **Legacy / optional capture path.** This SKILL imports a Gemini share-link conversation. The primary capture path for agent-twin is `/save_session` (snapshots the current Claude Code session) or `/counselor` (guided questionnaire). Use `/extract_gemini` only if you specifically want to import a Gemini conversation.
+
+When this skill is invoked, walk the user through extracting a Gemini conversation and producing the three files the analysis pipeline needs:
 
 | File | Purpose |
 |------|---------|
-| `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json` | Raw turn-by-turn capture |
-| `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/annotated.txt` | Same content with topic-cluster headers |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json` | Raw turn-by-turn capture |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt` | Same content with topic-cluster headers |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/session_meta.json` | Capture metadata so `/run_pipeline` can scan the queue |
 
 The format spec lives in `skills/extract_gemini/TEMPLATE.md`. Real samples live in `skills/extract_gemini/samples/`.
 
+### `session_meta.json` schema
+
+This file mirrors what the autosave Stop hook (`scripts/autosave_session.py`) writes for `/save_session` captures, so `/run_pipeline`'s queue-scan logic can treat both capture paths uniformly. Required fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `session_id` | string | The full save-session ID (`YYYY-MM-DD_<12-hex>`). |
+| `turn_count` | integer | Number of `{order, user, model}` entries in `conversation.json`. |
+| `saved_at` | string (ISO-8601) | When this capture was written. Use the value of `datetime.now().isoformat()`. |
+| `source` | string | Capture path tag — set to `"extract_gemini"` so future tooling can distinguish capture origins from autosave (`"save_session"`). |
+
+Any future capture path (e.g. `/extract_chatgpt`) must write the same schema with its own `source` value.
+
 ## Step 1 — Generate session ID and create directory
 
-Generate a session ID with format `YYYY-MM-DD_<8-char-hex-guid>`. You can produce the GUID with:
+Generate a session ID with format `YYYY-MM-DD_<12-char-hex-guid>` (matching `/save_session`'s convention). You can produce the GUID with:
 
 ```bash
-python -c "import uuid; print(uuid.uuid4().hex[:8])"
+python3 -c "import uuid; print(uuid.uuid4().hex[:12])"
 ```
 
 Create the directory:
 
 ```
-${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/
+$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/
 ```
 
 Tell the user the session ID you generated.
 
 ### Existing-directory handling
 
-The hex GUID makes collision essentially impossible, but a re-extract on the same day can collide if the user reuses an ID intentionally. Before writing into an existing `${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/`:
+A 12-hex GUID is collision-resistant for typical use (~1/280-trillion space), but a re-extract on the same day can still collide if the user reuses an ID intentionally. Before writing into an existing `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/`:
 
 1. If the directory exists and contains files (`conversation.json`, `annotated.txt`, or an `analyses/` subdir), **stop** and ask the user. Two acceptable choices:
    - **Generate a fresh session ID** (default; safer). Re-run Step 1 with a new GUID. Any prior pipeline outputs at the old ID are preserved untouched.
@@ -45,24 +61,26 @@ Do not silently overwrite. The session ID is the de-facto join key for downstrea
 
 Ask the user for a Gemini share link (a URL like `gemini.google.com/share/<id>`). If they don't have one yet, instruct them to open the conversation in Gemini and click the share button.
 
-Then show them the capture procedure:
+**The scraper is browser-only.** `scraper.js` uses `window`, `document`, and `MutationObserver` — it is **not** runnable as `node scraper.js` from a terminal. The user must paste it into the DevTools Console of the open Gemini share page.
 
-1. Open the share link in a browser
-2. **Scroll to the top of the conversation** (this forces all turns to render — Gemini uses virtual scrolling and the scraper depends on every turn being in the DOM at least once)
-3. Open DevTools (`F12`) → Console
-4. Paste the contents of `skills/extract_gemini/scraper.js` Step 1 block, press Enter — it will start logging captures
-5. Scroll smoothly through the **entire** conversation from top to bottom (the MutationObserver picks up each turn as it scrolls into view)
-6. Confirm the captured count matches the user's expected turn count
-7. Paste the Step 2 block to download `gemini-conversation.json`
+Then walk the user through the capture procedure:
 
-You can read the actual scraper at `skills/extract_gemini/scraper.js` and paste the relevant blocks for the user.
+1. Open the Gemini share link in a browser (the share URL must already be loaded in the visible tab).
+2. **Scroll to the top of the conversation.** Gemini uses virtual scrolling, so every turn must enter the DOM at least once — start at the top.
+3. Open DevTools by pressing `F12` (or right-click → *Inspect*), then switch to the **Console** tab.
+4. **Open `skills/extract_gemini/scraper.js`, copy the *Step 1* block, paste it into the Console, and press Enter.** It will start logging "捕捉第 N 輪" as it captures turns.
+5. Scroll smoothly through the **entire** conversation from top to bottom. The `MutationObserver` picks up each turn as it scrolls into view.
+6. Confirm the captured count in the Console matches the user's expected turn count.
+7. **Copy the *Step 2* block from `scraper.js`, paste it into the Console, and press Enter.** A file named `gemini-conversation.json` will download via the browser.
+
+You can read the actual scraper at `skills/extract_gemini/scraper.js` and paste the relevant blocks for the user. Do not attempt to run it from a terminal — it has no Node entry point.
 
 ## Step 3 — Receive the captured file
 
 Ask the user to confirm the file downloaded. Then move it to the session directory:
 
 ```bash
-mv ~/Downloads/gemini-conversation.json ${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json
+mv ~/Downloads/gemini-conversation.json $HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json
 ```
 
 (Adjust the source path for the user's OS.)
@@ -73,7 +91,7 @@ Check the JSON against the expected shape:
 
 ```python
 import json, sys
-with open('${AGENT_TWIN_DATA}/personalized/saves/session/<session_id>/conversation.json') as f:
+with open('$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json') as f:
     data = json.load(f)
 assert isinstance(data, list)
 assert all('order' in t and 'user' in t and 'model' in t for t in data)
@@ -105,13 +123,30 @@ Rules:
 - Replace newlines in user/AI text with single spaces (the analysts read line-by-line)
 - Truncate AI summaries at ~120 chars and append `...`
 
+## Step 5.5 — Write `session_meta.json`
+
+Write `session_meta.json` to the session directory using the schema documented at the top of this SKILL. This file is required so `/run_pipeline`'s queue scan can read `turn_count` without re-parsing `conversation.json`.
+
+Example content:
+
+```json
+{
+  "session_id": "<YYYY-MM-DD>_<12-hex>",
+  "turn_count": <len(conversation.json)>,
+  "saved_at": "<ISO-8601 timestamp>",
+  "source": "extract_gemini"
+}
+```
+
+Match the schema produced by `scripts/autosave_session.py` for `/save_session` captures (plus the `source` discriminator) so both capture paths are interchangeable downstream.
+
 ## Step 6 — Confirm and report
 
 Print a summary to the user:
 - Session ID
 - Total turns captured
 - Number of topic clusters identified
-- Paths to the two files
+- Paths to the three files (`conversation.json`, `annotated.txt`, `session_meta.json`)
 
 Tell the user the session is now ready for the analysis pipeline (the next skill they typically invoke is the analysis trigger — referenced separately).
 
@@ -119,9 +154,10 @@ Tell the user the session is now ready for the analysis pipeline (the next skill
 
 Before declaring done, verify:
 
-- [ ] Session ID matches format `YYYY-MM-DD_<8-char-hex>`
+- [ ] Session ID matches format `YYYY-MM-DD_<12-char-hex>`
 - [ ] `conversation.json` exists at the expected path and parses as the expected schema
 - [ ] `annotated.txt` exists at the expected path
+- [ ] `session_meta.json` exists at the expected path with `session_id`, `turn_count`, `saved_at`, `source: "extract_gemini"`
 - [ ] Cluster headers cover every turn (no orphan turns between clusters)
 - [ ] Topic labels are descriptive and language-matched
 - [ ] AI summaries are truncated at ~120 chars
@@ -142,3 +178,5 @@ skills/extract_gemini/
     ├── conversation.json ← minimal valid input
     └── annotated.txt     ← minimal valid output
 ```
+
+Imported. Next: run `/run_pipeline` to analyze the captured conversation.

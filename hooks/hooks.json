@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"; elif command -v python >/dev/null 2>&1; then python \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"; elif command -v py >/dev/null 2>&1; then py \"${CLAUDE_PLUGIN_ROOT}/scripts/autosave_session.py\"; else true; fi",
             "async": true,
             "timeout": 30
           }

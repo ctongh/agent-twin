@@ -1,10 +1,10 @@
 ---
-description: Capture a Gemini share-link conversation and prepare it (with topic-cluster annotation) for the agent-twin analysis pipeline
+description: (legacy/optional) Capture a Gemini share-link conversation and prepare it (with topic-cluster annotation) for the agent-twin analysis pipeline. Primary capture is /save_session or /counselor.
 argument-hint: [optional Gemini share URL]
 ---
 
-Execute the agent-twin `extract_gemini` skill. Follow the SKILL.md below exactly, step by step.
+# /extract_gemini
 
-If `$ARGUMENTS` is non-empty, treat it as the Gemini share URL the user wants to capture (skip asking for it in Step 2). Otherwise ask the user for the URL as the skill directs.
+**Legacy / optional capture path.** The primary capture flow for agent-twin is `/save_session` (snapshots the current Claude Code session) or `/counselor` (guided questionnaire). Use `/extract_gemini` only if you specifically want to import a Gemini share-link conversation.
 
-@${CLAUDE_PLUGIN_ROOT}/skills/extract_gemini/SKILL.md
+To execute, invoke the `extract_gemini` skill via the Skill tool. See `skills/extract_gemini/SKILL.md` for the full specification.

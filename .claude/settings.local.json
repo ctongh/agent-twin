@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python *)",
-      "WebSearch",
-      "Bash(xargs sed *)"
-    ]
-  }
-}

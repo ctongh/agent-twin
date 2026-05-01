@@ -9,6 +9,14 @@ When this skill is invoked, capture the *current* Claude Code conversation and w
 
 The output schema is documented in `skills/extract_gemini/TEMPLATE.md`. Do not redefine it here; just produce conformant files.
 
+## Step 0 — Preflight: Python availability
+
+This whole skill ultimately depends on Python: Step 3 invokes `scripts/autosave_session.py`, and Step 1's fallback path (when the Claude Code session UUID cannot be resolved from `~/.claude/projects/`) generates a GUID via `<PYTHON> -c "import uuid; print(uuid.uuid4().hex[:12])"`. Verify Python is reachable **before** any Python-dependent operation runs.
+
+Try `python3 --version` first, then `python --version`, then `py --version` (Windows fallback). Record which command succeeded — Steps 1 and 3 should reuse it. If none succeed, tell the user — in their language — "Python 3.8+ is required for /save_session. See README Requirements section for install instructions." Then stop without erroring; do not proceed to Step 1.
+
+**Throughout this SKILL, `<PYTHON>` is a placeholder for the interpreter you recorded above (one of `python3`, `python`, or `py`). Substitute it before running any command.**
+
 ## Step 1 — Resolve the session ID
 
 The Claude Code project's session transcripts live (on this user's machine) under a path of the form:
@@ -23,32 +31,36 @@ On Windows that is typically `C:/Users/<user>/.claude/projects/<encoded-project-
 
 1. List the JSONL files in the project's `~/.claude/projects/<encoded-project-path>/` directory. There is exactly one file matching the *current* session — find it by inspecting the most recently modified JSONL (the active session writes to its file continuously).
 2. Extract the CC session UUID from the filename.
-3. Derive the save-session ID: `<YYYY-MM-DD>_<first-8-hex-chars-of-cc-session-uuid>`. Use today's date.
+3. Derive the save-session ID: `<YYYY-MM-DD>_<first-12-hex-chars-of-cc-session-uuid>`. Use the **first-write date** — i.e. the date the session was first captured. If a directory ending in `_<session-prefix>` already exists under `saves/session/`, reuse it (sessions spanning midnight stay in the original date's directory; the autosave hook only stamps a new date on the very first write). (12 hex chars gives ~1/280-trillion collision probability — collision-resistant for typical use — versus 8 chars at ~1/4-billion.)
 
 This gives a deterministic mapping: the same Claude Code session always maps to the same save-session ID. Re-invoking the skill in the same session overwrites the previous snapshot rather than producing duplicates.
 
-If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `python -c "import uuid; print(uuid.uuid4().hex[:8])"` and proceed.
+If the JSONL cannot be located (file moved, Claude Code internals changed), fall back to: ask the user to confirm; if they agree, generate a fresh GUID with `<PYTHON> -c "import uuid; print(uuid.uuid4().hex[:12])"` and proceed.
 
 ## Step 2 — Create the session directory
 
 ```
-${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/
+$HOME/.claude/agent-twin/personalized/saves/session/<save-session-id>/
 ```
 
 If the directory already exists, that is expected (this is an overwrite). Do not delete the directory or other files within it; only the files this skill writes (`conversation.json`, optionally `annotated.txt`) get overwritten.
 
 ## Step 3 — Run the extraction script
 
-The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the session JSON piped in:
+The Python preflight is already done in Step 0 — reuse the interpreter (`python3` / `python` / `py`) that succeeded there.
+
+The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the Claude Code session UUID piped in as JSON, using the `<PYTHON>` interpreter recorded in Step 0:
 
 ```bash
-echo '{"session_id": "<SESSION_ID>"}' | python scripts/autosave_session.py
+echo '{"session_id": "<CC_SESSION_UUID>"}' | <PYTHON> scripts/autosave_session.py
 ```
 
+`<CC_SESSION_UUID>` is the **Claude Code session UUID** — the filename stem of the active `~/.claude/projects/<encoded-project-path>/<UUID>.jsonl` transcript. **It is NOT the `<save-session-id>` (`YYYY-MM-DD_<prefix>`) derived in Step 1.** The script greps for the JSONL by this UUID; passing the save-session-id here will fail to locate any transcript.
+
 The script will:
-1. Locate the JSONL file under `~/.claude/projects/` using the session ID
+1. Locate the JSONL file under `~/.claude/projects/` using the Claude Code session UUID
 2. Extract user/assistant text turns (skipping tool calls and system events)
-3. Write `conversation.json` to `${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/`
+3. Write `conversation.json` to `$HOME/.claude/agent-twin/personalized/saves/session/<save-session-id>/`
 
 **Do not write a new script inline.** Always use `scripts/autosave_session.py`.
 
@@ -72,7 +84,7 @@ The point is to preserve the user side of the conversation losslessly (the analy
 Write `conversation.json` to:
 
 ```
-${AGENT_TWIN_DATA}/personalized/saves/session/<save-session-id>/conversation.json
+$HOME/.claude/agent-twin/personalized/saves/session/<save-session-id>/conversation.json
 ```
 
 If the session is large enough to skip annotation in this skill (it would consume considerable tokens), produce `conversation.json` only and tell the user that `annotated.txt` will be produced when they next run the analysis pipeline. If the session is small (< 100,000 chars), proceed to Step 6 and produce `annotated.txt` here.
@@ -109,3 +121,5 @@ Calling `save_session` twice within the same Claude Code session must produce **
 - Cleanup / retention of old session captures (will be addressed later)
 - Cross-session deduplication (different CC sessions may have overlapping content; this is fine)
 - Anything that requires network access (capture is local-only)
+
+Saved. Next: run `/run_pipeline` to analyze, or run `/save_session` again later to update.

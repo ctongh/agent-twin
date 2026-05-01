@@ -1,8 +1,8 @@
 # Personal data — never committed to shared repos
 personalized/
 
-# Personalized methodology overrides — per-user customizations
-methodology/personalized/
+# Per-user permission cache — never distributed
+.claude/settings.local.json
 
 # OS / IDE artifacts
 .DS_Store
