@@ -23,7 +23,7 @@ On Windows that is typically `C:/Users/<user>/.claude/projects/<encoded-project-
 
 1. List the JSONL files in the project's `~/.claude/projects/<encoded-project-path>/` directory. There is exactly one file matching the *current* session — find it by inspecting the most recently modified JSONL (the active session writes to its file continuously).
 2. Extract the CC session UUID from the filename.
-3. Derive the save-session ID: `<YYYY-MM-DD>_<first-12-hex-chars-of-cc-session-uuid>`. Use today's date. (12 hex chars gives ~1/280-trillion collision probability — practically zero — versus 8 chars at ~1/4-billion.)
+3. Derive the save-session ID: `<YYYY-MM-DD>_<first-12-hex-chars-of-cc-session-uuid>`. Use the **first-write date** — i.e. the date the session was first captured. If a directory ending in `_<session-prefix>` already exists under `saves/session/`, reuse it (sessions spanning midnight stay in the original date's directory; the autosave hook only stamps a new date on the very first write). (12 hex chars gives ~1/280-trillion collision probability — collision-resistant for typical use — versus 8 chars at ~1/4-billion.)
 
 This gives a deterministic mapping: the same Claude Code session always maps to the same save-session ID. Re-invoking the skill in the same session overwrites the previous snapshot rather than producing duplicates.
 
@@ -39,12 +39,12 @@ If the directory already exists, that is expected (this is an overwrite). Do not
 
 ## Step 3 — Run the extraction script
 
-**Preflight: check Python is available.** If neither `python --version` nor `py --version` succeeds, tell the user: "Python 3.8+ is required for /save_session. See README Requirements section for install instructions." Then stop without erroring.
+**Preflight: check Python is available.** Try `python3 --version` first, then `python --version`, then `py --version` (Windows fallback). If none succeed, tell the user: "Python 3.8+ is required for /save_session. See README Requirements section for install instructions." Then stop without erroring.
 
-The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the session JSON piped in:
+The project ships a ready-to-use extraction script at `scripts/autosave_session.py`. Run it with the session JSON piped in (prefer `python3` on Linux/macOS; use `py` only as a Windows fallback):
 
 ```bash
-echo '{"session_id": "<SESSION_ID>"}' | python scripts/autosave_session.py
+echo '{"session_id": "<SESSION_ID>"}' | python3 scripts/autosave_session.py
 ```
 
 The script will:

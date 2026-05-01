@@ -7,21 +7,35 @@ description: Capture a conversation from a Gemini share link and prepare it (wit
 
 > **Legacy / optional capture path.** This SKILL imports a Gemini share-link conversation. The primary capture path for agent-twin is `/save_session` (snapshots the current Claude Code session) or `/counselor` (guided questionnaire). Use `/extract_gemini` only if you specifically want to import a Gemini conversation.
 
-When this skill is invoked, walk the user through extracting a Gemini conversation and producing the two files the analysis pipeline needs:
+When this skill is invoked, walk the user through extracting a Gemini conversation and producing the three files the analysis pipeline needs:
 
 | File | Purpose |
 |------|---------|
 | `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/conversation.json` | Raw turn-by-turn capture |
 | `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/annotated.txt` | Same content with topic-cluster headers |
+| `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/session_meta.json` | Capture metadata so `/run_pipeline` can scan the queue |
 
 The format spec lives in `skills/extract_gemini/TEMPLATE.md`. Real samples live in `skills/extract_gemini/samples/`.
 
+### `session_meta.json` schema
+
+This file mirrors what the autosave Stop hook (`scripts/autosave_session.py`) writes for `/save_session` captures, so `/run_pipeline`'s queue-scan logic can treat both capture paths uniformly. Required fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `session_id` | string | The full save-session ID (`YYYY-MM-DD_<12-hex>`). |
+| `turn_count` | integer | Number of `{order, user, model}` entries in `conversation.json`. |
+| `saved_at` | string (ISO-8601) | When this capture was written. Use the value of `datetime.now().isoformat()`. |
+| `source` | string | Capture path tag — set to `"extract_gemini"` so future tooling can distinguish capture origins from autosave (`"save_session"`). |
+
+Any future capture path (e.g. `/extract_chatgpt`) must write the same schema with its own `source` value.
+
 ## Step 1 — Generate session ID and create directory
 
-Generate a session ID with format `YYYY-MM-DD_<8-char-hex-guid>`. You can produce the GUID with:
+Generate a session ID with format `YYYY-MM-DD_<12-char-hex-guid>` (matching `/save_session`'s convention). You can produce the GUID with:
 
 ```bash
-python -c "import uuid; print(uuid.uuid4().hex[:8])"
+python3 -c "import uuid; print(uuid.uuid4().hex[:12])"
 ```
 
 Create the directory:
@@ -34,7 +48,7 @@ Tell the user the session ID you generated.
 
 ### Existing-directory handling
 
-The hex GUID makes collision essentially impossible, but a re-extract on the same day can collide if the user reuses an ID intentionally. Before writing into an existing `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/`:
+A 12-hex GUID is collision-resistant for typical use (~1/280-trillion space), but a re-extract on the same day can still collide if the user reuses an ID intentionally. Before writing into an existing `$HOME/.claude/agent-twin/personalized/saves/session/<session_id>/`:
 
 1. If the directory exists and contains files (`conversation.json`, `annotated.txt`, or an `analyses/` subdir), **stop** and ask the user. Two acceptable choices:
    - **Generate a fresh session ID** (default; safer). Re-run Step 1 with a new GUID. Any prior pipeline outputs at the old ID are preserved untouched.
@@ -109,13 +123,30 @@ Rules:
 - Replace newlines in user/AI text with single spaces (the analysts read line-by-line)
 - Truncate AI summaries at ~120 chars and append `...`
 
+## Step 5.5 — Write `session_meta.json`
+
+Write `session_meta.json` to the session directory using the schema documented at the top of this SKILL. This file is required so `/run_pipeline`'s queue scan can read `turn_count` without re-parsing `conversation.json`.
+
+Example content:
+
+```json
+{
+  "session_id": "<YYYY-MM-DD>_<12-hex>",
+  "turn_count": <len(conversation.json)>,
+  "saved_at": "<ISO-8601 timestamp>",
+  "source": "extract_gemini"
+}
+```
+
+Match the schema produced by `scripts/autosave_session.py` for `/save_session` captures (plus the `source` discriminator) so both capture paths are interchangeable downstream.
+
 ## Step 6 — Confirm and report
 
 Print a summary to the user:
 - Session ID
 - Total turns captured
 - Number of topic clusters identified
-- Paths to the two files
+- Paths to the three files (`conversation.json`, `annotated.txt`, `session_meta.json`)
 
 Tell the user the session is now ready for the analysis pipeline (the next skill they typically invoke is the analysis trigger — referenced separately).
 
@@ -123,9 +154,10 @@ Tell the user the session is now ready for the analysis pipeline (the next skill
 
 Before declaring done, verify:
 
-- [ ] Session ID matches format `YYYY-MM-DD_<8-char-hex>`
+- [ ] Session ID matches format `YYYY-MM-DD_<12-char-hex>`
 - [ ] `conversation.json` exists at the expected path and parses as the expected schema
 - [ ] `annotated.txt` exists at the expected path
+- [ ] `session_meta.json` exists at the expected path with `session_id`, `turn_count`, `saved_at`, `source: "extract_gemini"`
 - [ ] Cluster headers cover every turn (no orphan turns between clusters)
 - [ ] Topic labels are descriptive and language-matched
 - [ ] AI summaries are truncated at ~120 chars

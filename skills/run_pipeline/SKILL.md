@@ -86,7 +86,11 @@ If `$HOME/.claude/agent-twin/personalized/results/profile/behavior_brief.md` doe
 
 **Build the queue:**
 
-Scan every subdirectory under `$HOME/.claude/agent-twin/personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`). Apply this logic:
+Scan every subdirectory under `$HOME/.claude/agent-twin/personalized/saves/session/` that contains a `conversation.json`. For each session, read its `session_meta.json` (for `turn_count`) and `pipeline_state.json` (for `conversation_turns_at_analysis` and `phases`).
+
+**Defensive fallback for missing `session_meta.json`:** if the meta file does not exist (e.g. a legacy capture from before the `extract_gemini` schema fix, or a partially-written session), do not error. Instead, compute `turn_count` by loading `conversation.json` and using `len(data)` (the file is a JSON array of `{order, user, model}` objects per `scripts/autosave_session.py`'s schema). Log a single one-line warning — in the user's language — that meta is missing for this session and the count was inferred. Then proceed as normal.
+
+Apply this logic:
 
 | Condition | Action |
 |-----------|--------|

@@ -56,6 +56,13 @@ def main():
 
     # Find the JSONL file across all project dirs under ~/.claude/projects/
     claude_projects = Path.home() / ".claude" / "projects"
+
+    # Guard against fresh installs / first-ever Stop hook fire: if Claude Code
+    # has not yet created ~/.claude/projects/ (or it is somehow not a directory),
+    # there is nothing to scan — no-op cleanly instead of crashing on iterdir().
+    if not claude_projects.exists() or not claude_projects.is_dir():
+        return
+
     jsonl_file = None
     for project_dir in claude_projects.iterdir():
         if project_dir.is_dir():

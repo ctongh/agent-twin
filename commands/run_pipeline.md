@@ -1,6 +1,6 @@
 ---
 description: Run the full agent-twin analysis pipeline on a saved session — Phase 1 (four analysts in parallel + meta-critic loop + synthesis-builder), then Phase 2/3/4 builders, then behavior-brief-generator
-argument-hint: [optional session_id of form YYYY-MM-DD_<8hex>, or empty for most-recent]
+argument-hint: [optional session_id of form YYYY-MM-DD_<hex>, or empty for most-recent]
 ---
 
 # /run_pipeline

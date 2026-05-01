@@ -1,6 +1,6 @@
 ---
 description: Run meta-critic standalone on a directory of analyst outputs (manual audit entry point — orchestrator handles this automatically inside its loop)
-argument-hint: [optional session_id of form YYYY-MM-DD_<8hex>, or full analyses_dir path]
+argument-hint: [optional session_id of form YYYY-MM-DD_<hex>, or full analyses_dir path]
 ---
 
 # /run_meta_critic
