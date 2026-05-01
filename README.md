@@ -94,7 +94,7 @@ Confirm with `python --version` (you should see `Python 3.8` or later). No PyPI 
 
 ## What you can run
 
-Eight slash commands ship with the plugin. Most users will only ever touch three of them (`/counselor`, `/run_pipeline`, `/load_persona`). The others exist for specific situations.
+Nine slash commands ship with the plugin. Most users will only ever touch three of them (`/counselor`, `/run_pipeline`, `/load_persona`). The others exist for specific situations.
 
 | You want to… | Command | Result |
 |---|---|---|
@@ -104,6 +104,7 @@ Eight slash commands ship with the plugin. Most users will only ever touch three
 | Build the full persona profile | `/run_pipeline` | All four detailed artefacts plus the brief |
 | Apply your profile to this session | `/load_persona` | Silent load — the assistant adapts from here on |
 | See what the assistant just loaded | `/show_persona` | Prints the brief; supports `values`, `cognitive`, `graph`, `model`, `all` |
+| Ask your persona twin without persona-shaping this session | `/consult_twin` | One-shot Task dispatch — twin reads the brief in its own context and replies in your voice |
 | Re-audit Phase 1 without rebuilding | `/run_meta_critic` | Quality verdict on existing analyst outputs |
 | Methodology compliance check | `/validate_pipeline` | Privacy, format, and safety verdict per validator |
 
@@ -208,7 +209,7 @@ These are the specialist subagents the pipeline dispatches. They are not meant t
 
 ```
 agent-twin/
-├── agents/                              # 10 subagent system prompts
+├── agents/                              # 11 subagent system prompts (10 pipeline + 1 consult)
 │   ├── affect-analyst.md                #   Phase 1
 │   ├── social-dynamics-analyst.md       #   Phase 1
 │   ├── values-analyst.md                #   Phase 1
@@ -218,18 +219,21 @@ agent-twin/
 │   ├── cognitive-patterns-builder.md    #   Phase 2
 │   ├── knowledge-graph-builder.md       #   Phase 3
 │   ├── behavioral-model-builder.md      #   Phase 4
-│   └── behavior-brief-generator.md      #   Final compression
+│   ├── behavior-brief-generator.md      #   Final compression
+│   └── twin-advisor.md                  #   Consult agent (dispatched by /consult_twin)
 │
-├── skills/                              # 7 SKILL.md files (sources of truth)
+├── skills/                              # 9 SKILL.md files (sources of truth)
 │   ├── extract_gemini/                  #   Capture: Gemini import
 │   ├── save_session/                    #   Capture: Claude Code session
 │   ├── counselor/                       #   Capture: guided questionnaire
 │   ├── run_pipeline/                    #   Analyze: full pipeline
 │   ├── load_persona/                    #   Load: apply profile
+│   ├── show_persona/                    #   Inspect: print profile products
+│   ├── consult_twin/                    #   Consult: ask the twin without persisting persona shaping
 │   ├── run_meta_critic/                 #   QA: standalone audit
 │   └── validate_pipeline/               #   QA: methodology compliance
 │
-├── commands/                            # 8 slash command routers
+├── commands/                            # 9 slash command routers
 ├── methodology/                         # Design notes + output contract schema
 ├── scripts/
 │   └── autosave_session.py              # Stop hook: capture on session exit

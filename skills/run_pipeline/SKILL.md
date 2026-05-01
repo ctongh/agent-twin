@@ -58,11 +58,11 @@ Also scan per-session state files at `$HOME/.claude/agent-twin/personalized/save
 | Prior state | User-facing prompt | Action on Y / Yes / default | Action on N / No |
 |---|---|---|---|
 | No state files anywhere | (no prompt — fresh run) | Proceed to Step 1 | n/a |
-| All phases (per-session `analysts` for all queued sessions AND global `phase1` / `phase2` / `phase3` / `phase4` / `final`) are `complete` AND `conversation_turns_at_analysis` matches current `turn_count` for every session | "This session already has a complete profile. Re-run the pipeline from scratch? [y/N]" | Archive existing state files (rename to `pipeline_state.<ISO-8601-timestamp>.json` in the same dir) and proceed to Step 1 as a fresh run. | Stop. Tell the user: "Nothing to do. Run `/load_persona` to use the existing profile, or `/show_persona` to inspect it." |
+| All phases (per-session `analysts` for all queued sessions AND global `phase1` / `phase2` / `phase3` / `phase4` / `final`) are `complete` AND `conversation_turns_at_analysis` matches current `turn_count` for every session | "This session already has a complete profile. Re-run the pipeline from scratch? [y/N]" | Archive existing state files (rename to `pipeline_state.<YYYYMMDDTHHMMSSZ>.json` in the same dir, e.g. `pipeline_state.20260429T142300Z.json`) and proceed to Step 1 as a fresh run. | Stop. Tell the user: "Nothing to do. Run `/load_persona` to use the existing profile, or `/show_persona` to inspect it." |
 | Any phase is `in_progress` (a prior run was interrupted mid-phase) | "Found an interrupted pipeline run — last in-progress phase was `<phase_name>` at `<updated_at>`. Resume? [Y/n]" | Resume: leave state intact, proceed to Step 1, and per Step 1.6's resume rules re-dispatch the in-progress phase from scratch. | Archive prior state files and proceed to Step 1 as a fresh run. |
 | Some phases `complete`, some `pending`, none `in_progress` (clean phase boundary; previous run finished a phase but never started the next) | "Found prior pipeline state — last completed phase was `<phase_name>`. Resume from `<next_phase_name>`? [Y/n]" | Resume: leave state intact, proceed to Step 1, and skip already-complete phases per their step-level skip rules. | Archive prior state files and proceed to Step 1 as a fresh run. |
 
-**Archiving rule:** when the user declines a resume, do **not** delete prior state files. Rename them in place to `pipeline_state.<ISO-8601-with-no-colons>.json` (e.g. `pipeline_state.2026-04-29T142311.json`). This preserves audit trail and never destroys data on user decline.
+**Archiving rule:** when the user declines a resume, do **not** delete prior state files. Rename them in place using a compact, no-colons UTC timestamp: `pipeline_state.<YYYYMMDDTHHMMSSZ>.json` (e.g. `pipeline_state.20260429T142300Z.json`). The literal ISO-8601 form (`2026-04-29T14:23:00+08:00`) cannot be used in filenames because Windows filesystems reject `:`. This preserves audit trail and never destroys data on user decline.
 
 ### Step 0.3 — Why this naturally covers token exhaustion
 
@@ -180,7 +180,7 @@ Use this pattern in any environment that supports it:
 1. Write the new content to `<path>.tmp` first.
 2. Then perform a same-volume rename (`mv -f`, `os.replace`, `Move-Item -Force`) onto the final path.
 
-The autosave Stop hook (`scripts/autosave_session.py`) ships with an `atomic_write_text` helper — use the same approach here. If the SKILL is invoking the Write tool directly, the rename-into-place step matters more than the temp filename: write fresh content in a single Write call (not append-then-truncate). Treat any state file with an unparseable JSON tail as corrupt, archive it (rename to `pipeline_state.corrupt.<timestamp>.json`), and treat that session/global slot as fresh.
+The autosave Stop hook (`scripts/autosave_session.py`) ships with an `atomic_write_text` helper — use the same approach here. If the SKILL is invoking the Write tool directly, the rename-into-place step matters more than the temp filename: write fresh content in a single Write call (not append-then-truncate). Treat any state file with an unparseable JSON tail as corrupt, archive it (rename to `pipeline_state.corrupt.<YYYYMMDDTHHMMSSZ>.json`, same no-colons format as the resume-decline archive), and treat that session/global slot as fresh.
 
 ### Per-session state update protocol
 

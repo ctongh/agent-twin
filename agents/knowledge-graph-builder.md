@@ -43,15 +43,28 @@ Phase 3 uses a fixed taxonomy:
 
 The node frontmatter schema and node template are defined in the **Output** section of this file. Follow that template exactly.
 
+### Type vs. directory naming (read this before any filename or path)
+
+The four node types each have **two** names — a singular value tag used inside files (frontmatter, filename prefix, wiki-link content) and a plural directory name on disk. Mixing the two breaks Step 2's directory placement and Step 3's filename rule. Always pick from the correct column.
+
+| Singular `{type}` (filename prefix, frontmatter `type:` value, wiki-link form) | Plural `{type_dir}` (directory name on disk under `<GRAPH_DIR>/`) |
+|---|---|
+| `concept` | `concepts/` |
+| `emotion` | `emotions/` |
+| `person` | `people/` |
+| `event` | `events/` |
+
+Note `person` (singular) ↔ `people/` (irregular plural). The frontmatter `type:` field uses the capitalized singular (`Concept | Emotion | Person | Event`); filename prefixes use the lowercase singular (`concept_`, `emotion_`, `person_`, `event_`). The directory name is always the plural form from the right column.
+
 ### Workflow
 
 **Step 1 — Seed nodes from Phase 1 synthesis.** Read the `Phase 3 seeds` list. Expand into a candidate node list: every concept, emotion, person, or event mentioned recurrently in the analyst reports.
 
-**Step 2 — Categorize.** Each node belongs in exactly one of `concepts/`, `emotions/`, `people/`, `events/`. Borderline cases default to `concepts/`.
+**Step 2 — Categorize.** Each node is placed in exactly one `{type_dir}` — i.e. one of `concepts/`, `emotions/`, `people/`, `events/`. Borderline cases default to `concepts/`.
 
 **Step 3 — Generate node files.** Use the node template in the **Output** section below. Populate frontmatter from the analyst reports:
 
-**Filename format:** `{type}_{sanitized_title}.md` where `{type}` is the directory name (`concept`, `emotion`, `people`, `event`) and `{sanitized_title}` is the node's title passed through the **Filename rules** section below. Prefer the subject's own script (CJK characters are preserved as-is); never romanize Chinese, Japanese, or Korean unnecessarily. The sanitization rules govern allowed characters, length, and rejection of dangerous inputs — follow them strictly.
+**Filename format:** `{type}_{sanitized_title}.md` where `{type}` is the lowercase singular tag from the table above (`concept`, `emotion`, `person`, `event` — note `person`, not `people`) and `{sanitized_title}` is the node's title passed through the **Filename rules** section below. The file is written under `<GRAPH_DIR>/{type_dir}/` where `{type_dir}` is the plural directory from the right-hand column (e.g. a `person`-typed node lives at `<GRAPH_DIR>/people/person_<sanitized_title>.md`). Prefer the subject's own script (CJK characters are preserved as-is); never romanize Chinese, Japanese, or Korean unnecessarily. The sanitization rules govern allowed characters, length, and rejection of dangerous inputs — follow them strictly.
 - `centrality`: 1–5; only mark `5` for nodes referenced by all four analysts. Cap at 5–7 hubs total.
 - `confidence`: high / medium / low — match the highest analyst-confidence claim about this node
 - `cross_framework_consensus`: count of distinct analysts (0–4) that surfaced this node
@@ -104,11 +117,12 @@ Node filenames are derived from the concept name but MUST be sanitized. Apply th
 3. **Reject** these absolutely — if a candidate filename would start with `.`, contain `..`, contain `/` or `\`, or match a Windows reserved name (CON, PRN, AUX, NUL, COM1–9, LPT1–9, case-insensitive), DO NOT create that file. Use a generic fallback `concept-<short-hash>` (the hash being the first 8 hex chars of a SHA-1 of the original title) and note the sanitization in the node body's `## Notes` section.
 4. **Length cap**: 64 characters for the `{sanitized_title}` portion. Truncate from the right if longer (preserve readable prefix).
 5. **Extension**: always `.md`. No exceptions. Never accept an extension supplied by source content.
-6. **Path scope**: every node MUST be written somewhere under `<GRAPH_DIR>/{concepts,emotions,people,events}/`. Never write outside this subtree, even if the concept name suggests a path. The `{type}_` prefix in the filename is informational only — directory placement is what matters.
+6. **Path scope**: every node MUST be written somewhere under `<GRAPH_DIR>/{type_dir}/` where `{type_dir}` is one of `concepts`, `emotions`, `people`, `events`. Never write outside this subtree, even if the concept name suggests a path. The `{type}_` filename prefix (singular: `concept_`, `emotion_`, `person_`, `event_`) is informational only — directory placement is what matters.
 
-Example sanitizations:
-- "存在的獨特性" → `concept_存在的獨特性.md` (CJK preserved; clean)
-- "主流 (mainstream)" → `concept_主流-mainstream.md`
+Example sanitizations (the leading prefix is the singular `{type}` tag, not the directory name):
+- "存在的獨特性" (Concept) → `concept_存在的獨特性.md` under `concepts/` (CJK preserved; clean)
+- "主流 (mainstream)" (Concept) → `concept_主流-mainstream.md` under `concepts/`
+- "manager_A" (Person) → `person_manager-a.md` under `people/` (note: filename prefix is `person_`, directory is `people/`)
 - "../etc/passwd" → REJECT path-traversal, write `concept_concept-<hash>.md` instead
 - "testname" (control char) → REJECT, use generic fallback
 - ".hidden_concept" → REJECT leading dot, use generic fallback

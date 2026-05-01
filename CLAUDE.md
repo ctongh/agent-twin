@@ -65,7 +65,7 @@ agent-twin/
 │   ├── plugin.json              # Plugin manifest; references hooks/hooks.json
 │   └── marketplace.json         # ctongh-plugins marketplace entry
 ├── agents/                      # 10 Claude Code subagent system prompts
-├── commands/                    # 8 slash command routers (one paragraph each)
+├── commands/                    # 9 slash command routers (one paragraph each)
 ├── hooks/
 │   └── hooks.json               # Stop hook config; runs autosave_session.py
 ├── methodology/
@@ -73,7 +73,7 @@ agent-twin/
 │   └── output_contract_schema.md # YAML contract format read by meta-critic
 ├── scripts/
 │   └── autosave_session.py      # Stop hook: snapshots ending sessions
-├── skills/                      # 8 SKILL.md files — the executable specs
+├── skills/                      # 9 SKILL.md files — the executable specs
 ├── CLAUDE.md                    # this file
 ├── README.md                    # public-facing prose
 └── LICENSE                      # MIT
@@ -103,7 +103,7 @@ $HOME/.claude/agent-twin/
 
 ## Commands
 
-Eight slash commands. Each is a thin router into the matching SKILL.
+Nine slash commands. Each is a thin router into the matching SKILL.
 
 | Command | SKILL | Purpose |
 |---|---|---|
@@ -113,6 +113,7 @@ Eight slash commands. Each is a thin router into the matching SKILL.
 | `/run_pipeline` | `skills/run_pipeline/SKILL.md` | Run the full 4-phase analysis pipeline; resume-aware |
 | `/load_persona` | `skills/load_persona/SKILL.md` | Silently load `behavior_brief.md` into the current session |
 | `/show_persona` | `skills/show_persona/SKILL.md` | Inspection complement to `/load_persona` — prints products to the conversation |
+| `/consult_twin` | `skills/consult_twin/SKILL.md` | Consult your persona twin from a working session without polluting this session's context |
 | `/run_meta_critic` | `skills/run_meta_critic/SKILL.md` | Standalone audit on an existing analyses directory |
 | `/validate_pipeline` | `skills/validate_pipeline/SKILL.md` | Methodology / safety umbrella validator |
 

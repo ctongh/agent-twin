@@ -5,30 +5,37 @@ description: Run an umbrella validator over the agent-twin project. Confirms the
 
 # validate_pipeline
 
-When invoked, run each implemented sub-validator in sequence. The pipeline passes only when every implemented sub-validator passes. Validators marked future-work are skipped gracefully — they do not block the run and do not affect the verdict.
+When invoked, run each implemented sub-validator in sequence. The pipeline passes only when every implemented sub-validator passes. Validators marked `planned` (documented in this SKILL but not yet implemented as files on disk) are skipped gracefully — they do not block the run and do not affect the verdict.
 
 ## Current scope
 
-**Currently only `methodology_neutrality` is enforced.** The other three validators listed below are planned future work — their files do not yet exist under `validators/`. Running this skill today exercises a single check.
+**Currently only `methodology_neutrality` is enforced.** The other three validators listed below are marked `status: planned` — they are documented in the registry but their files do not yet exist under `validators/`, so they are skipped gracefully. Running this skill today exercises a single check.
 
 ## Sub-validators
 
-The validators live in `skills/validate_pipeline/validators/`. As of writing:
+The validators live in `skills/validate_pipeline/validators/`. The table below is the **canonical, table-driven validator registry** — Step 1 of the execution protocol parses these rows to determine which validators to look for. As of writing:
 
 | Validator | Status | What it checks |
 |-----------|--------|----------------|
 | `methodology_neutrality` | implemented | The shareable framework files (`methodology/`, `agents/`, `skills/*/SKILL.md`, `skills/*/TEMPLATE.md`) reveal *no* identifying information about the subject |
-| `agent_format` | future work — not yet implemented | Each agent prompt has the required sections (identity, inputs, methodology, output, checklist, contract) and a parseable `output-contract` YAML block |
-| `gitignore` | future work — not yet implemented | `.gitignore` covers all personal-data paths (`personalized/`, etc.) and does not accidentally exclude framework files |
-| `malicious_skill` | future work — not yet implemented | Skills do not include obviously dangerous instructions (network exfiltration, mass file deletion, credential access) |
+| `agent_format` | planned | Each agent prompt has the required sections (identity, inputs, methodology, output, checklist, contract) and a parseable `output-contract` YAML block |
+| `gitignore` | planned | `.gitignore` covers all personal-data paths (`personalized/`, etc.) and does not accidentally exclude framework files |
+| `malicious_skill` | planned | Skills do not include obviously dangerous instructions (network exfiltration, mass file deletion, credential access) |
 
-Add a new validator by dropping a markdown file under `skills/validate_pipeline/validators/<name>.md` that follows the validator schema described below.
+Status semantics:
+- `implemented` — the validator has a corresponding markdown file under `validators/<name>.md` and is run on every invocation.
+- `planned` — the validator is documented in this table but its file does not yet exist on disk. It is skipped gracefully and counts toward `skipped_count`.
+
+Add a new validator by (a) adding its row to the table above with `status: implemented` (or `planned` if you are recording the intent before writing the file), and (b) dropping a markdown file under `skills/validate_pipeline/validators/<name>.md` that follows the validator schema described below.
 
 ## Execution protocol
 
-1. Enumerate the validators by listing files under `skills/validate_pipeline/validators/`. Validators that exist as files are run; validators referenced in this SKILL but missing on disk (the future-work entries above) are **skipped gracefully** — keep a `skipped_count` and surface it in the output.
-2. For each validator file, read its front matter. Skip files marked `status: planned` or `status: future` (they are stubs without runnable logic). Increment `skipped_count`.
-3. Run each implemented validator: read its instruction body, follow its check logic against the project tree.
+1. **Enumerate validators from the table, not the directory.** Parse the **Sub-validators** table above (treat each markdown row whose first column is a validator name as one entry; ignore the header and divider rows). For each table entry, record `(name, status)`. This table-driven approach is what makes `skipped_count` meaningful — file-based enumeration cannot see entries that are documented but missing on disk.
+2. For each table entry, decide what to do based on `status` and on whether `skills/validate_pipeline/validators/<name>.md` exists:
+   - `status: implemented` AND file exists → run it (proceed to step 3).
+   - `status: implemented` BUT file missing on disk → treat as a **broken registry entry**: skip with a warning naming the missing file, and increment `skipped_count`. (Either fix the table or add the file before the next run.)
+   - `status: planned` → skip gracefully without warning; increment `skipped_count`. The corresponding file may or may not exist; either way, no logic is run.
+3. For each validator scheduled to run, read the validator file's front matter (which should also declare `status: implemented`) and instruction body, then follow its check logic against the project tree.
 4. Each validator returns:
    - `pass` — no findings
    - `pass_with_warnings` — soft findings only
@@ -37,7 +44,7 @@ Add a new validator by dropping a markdown file under `skills/validate_pipeline/
    - `pass` if every executed validator returned `pass`
    - `pass_with_warnings` if no validator failed but warnings exist
    - `fail` if any validator failed
-6. Never error because a future-work validator is missing on disk. Print `(<skipped_count> future-work validators skipped)` in the summary line.
+6. Never error because a planned validator is missing on disk. Print `(<skipped_count> planned validators skipped)` in the summary line.
 
 ## Output
 
@@ -52,7 +59,7 @@ validate_pipeline result: <pass | pass_with_warnings | fail>
   <validator-name>: <result>
     ...
 
-Summary: N validators, P passed, W warnings, F failures (<S> future-work validators skipped)
+Summary: N validators, P passed, W warnings, F failures (<S> planned validators skipped)
 ```
 
 If any failures, include for each:
