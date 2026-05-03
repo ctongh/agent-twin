@@ -1,5 +1,7 @@
 # agent-twin
 
+**English** | [繁體中文](README.zh-TW.md)
+
 **A Claude Code plugin that learns who you are from your own conversations, then teaches every future session to talk to *you* — not a generic user.**
 
 agent-twin reads back the AI conversations you've already had, looks at them through four independent analytical lenses, and distills what it finds into a short brief. From then on, whenever you load that brief at the start of a session, Claude already knows the rhythm of how you think, the kinds of mistakes you don't want it to make, and the topics where you've changed your mind before.
